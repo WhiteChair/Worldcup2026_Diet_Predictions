@@ -284,7 +284,7 @@ function flash(msg, kind) {
   const f = $("flash"); f.textContent = msg; f.className = "banner " + (kind||"ok"); f.classList.remove("hidden");
   clearTimeout(flash._t); flash._t = setTimeout(() => f.classList.add("hidden"), 4000);
 }
-function show(view) { ["homeView","poolView","killView"].forEach(v => $(v).classList.toggle("hidden", v !== view)); }
+function show(view) { ["homeView","poolView","killView"].forEach(v => $(v).classList.toggle("hidden", v !== view + "View")); }
 function allTeams() { return STATE.groups.flatMap(g => g.teams); }
 function poolUrl(extra) { return location.origin + location.pathname + "?pool=" + POOL + (extra||""); }
 
