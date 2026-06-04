@@ -117,11 +117,25 @@
     </div>
 
     <div class="card">
-      <h2>Manage existing pools</h2>
-      <p class="hint">Enter your owner code to list pools you've created.</p>
+      <h2>Organiser tools</h2>
+      <p class="hint">Enter your owner code to list pools and enter official results (results apply to <b>all</b> pools at once).</p>
       <input type="password" id="listCode" placeholder="owner code" />
-      <button class="ghost" id="listBtn" style="margin-top:10px">List pools</button>
+      <div class="row-actions">
+        <button class="ghost" id="listBtn">List pools</button>
+        <button class="ghost" id="loadResultsBtn">Enter official results</button>
+      </div>
       <div id="poolList" style="margin-top:14px"></div>
+
+      <div id="orgResults" class="hidden" style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px">
+        <h3>Official results <span class="hint">— scores every pool the moment you save</span></h3>
+        <h3>Group winners</h3><div id="resGroups" class="group-grid"></div>
+        <h3>Quarter-finalists <span class="counter" id="rcQf">0 / 8</span></h3><div id="resQf" class="pills"></div>
+        <h3>Semi-finalists <span class="counter" id="rcSf">0 / 4</span></h3><div id="resSf" class="pills"></div>
+        <h3>Finalists <span class="counter" id="rcFn">0 / 2</span></h3><div id="resFn" class="pills"></div>
+        <h3>Champion</h3><select id="resChampion"><option value="">— none yet —</option></select>
+        <p class="hint" style="margin-top:8px">Leave a stage blank until it's decided. Penalties only apply once a stage's results are in.</p>
+        <button class="primary" id="saveResults">Save official results</button>
+      </div>
     </div>
   </section>
 
@@ -168,13 +182,21 @@
 
     <section id="tab-stats" class="hidden">
       <div class="card">
-        <h2>Live stats</h2>
+        <h2>📊 What everyone is predicting</h2>
         <div class="grid2" style="margin-bottom:14px">
           <div class="group-box"><strong>Total entries</strong><div id="statTotal" style="font-size:28px;font-weight:800">0</div></div>
           <div class="group-box"><strong>Page visits</strong><div id="statVisits" style="font-size:28px;font-weight:800">0</div></div>
         </div>
-        <h3>Champion picks</h3>
-        <div id="champDist"></div>
+        <h3>👑 Most-predicted champion</h3>
+        <div id="distChampion"></div>
+        <h3>🏆 Most-predicted finalists</h3>
+        <div id="distFn"></div>
+        <h3>Most-predicted semi-finalists</h3>
+        <div id="distSf"></div>
+        <h3>Most-predicted quarter-finalists</h3>
+        <div id="distQf"></div>
+        <h3>Group winner favourites</h3>
+        <div id="distGroups"></div>
       </div>
     </section>
 
@@ -197,6 +219,11 @@
       </div>
 
       <div id="adminPanel" class="hidden">
+        <div class="card">
+          <h2>👋 Managing your pool</h2>
+          <p class="hint">As this pool's admin you can: customise the <b>branding</b> (name, colours, logo), edit the <b>teams &amp; groups</b>, tune the <b>scoring</b>, view and export <b>entries</b>, and reset or delete the pool. Changes are live immediately.</p>
+          <p class="hint" style="margin:0"><b>You do not enter match results.</b> Official results are entered once, centrally, by the tournament organiser — every pool then scores automatically. Your leaderboard updates on its own as the tournament progresses.</p>
+        </div>
         <div class="card">
           <h2>Share links</h2>
           <h3>Play link</h3><div class="linkbox" id="aPlayLink"></div>
@@ -234,13 +261,7 @@
         </div>
         <div class="card">
           <h2>Official results</h2>
-          <p class="hint">Enter results as each stage completes. Leaderboard recalculates instantly. Leave everything blank to keep all scores at 0.</p>
-          <h3>Group winners</h3><div id="resGroups" class="group-grid"></div>
-          <h3>Quarter-finalists <span class="counter" id="rcQf">0 / 8</span></h3><div id="resQf" class="pills"></div>
-          <h3>Semi-finalists <span class="counter" id="rcSf">0 / 4</span></h3><div id="resSf" class="pills"></div>
-          <h3>Finalists <span class="counter" id="rcFn">0 / 2</span></h3><div id="resFn" class="pills"></div>
-          <h3>Champion</h3><select id="resChampion"><option value="">— none yet —</option></select>
-          <button class="primary" id="saveResults">Save results</button>
+          <p class="hint" style="margin:0">🔒 Results are entered centrally by the tournament organiser and apply to every pool. You don't need to do anything here — scores update automatically as results come in.</p>
         </div>
         <div class="card">
           <h2>Entries &amp; data</h2>
@@ -272,7 +293,9 @@ let TOKEN = params.get("admin") || ""; // admin token from secret link
 
 let STATE = null, OFFLINE = false;
 const pick = { groups:{}, qf:new Set(), sf:new Set(), fn:new Set(), champion:"" };
+// Organizer global-results editor state (home page)
 const adminRes = { groups:{}, qf:new Set(), sf:new Set(), fn:new Set(), champion:"" };
+let ORG_GROUPS = []; // canonical real-draw groups returned by getResults
 
 const api = async (path, opts) => {
   const r = await fetch(path + (path.includes("?") ? "&" : "?") + "t=" + Date.now(), opts);
@@ -354,14 +377,28 @@ async function submitPrediction() {
 }
 
 // ---- stats / board ----
+function distBars(counts) {
+  const rows = Object.entries(counts || {}).sort((a,b) => b[1]-a[1]);
+  if (!rows.length) return "";
+  const max = rows[0][1];
+  return rows.map(([t,c]) =>
+    `<div class="bar-row"><span class="bar-name">${esc(t)}</span><span class="bar-track"><span class="bar-fill" style="width:${(c/max*100).toFixed(0)}%"></span></span><span class="bar-val">${c}</span></div>`).join("");
+}
+function renderDist(elId, counts, emptyMsg) {
+  $(elId).innerHTML = distBars(counts) || `<p class="hint">${emptyMsg}</p>`;
+}
 function renderStats() {
   $("statTotal").textContent = STATE.total; $("statVisits").textContent = STATE.visits;
-  const counts = STATE.champCounts || {};
-  const rows = Object.entries(counts).sort((a,b) => b[1]-a[1]);
-  const max = rows.length ? rows[0][1] : 1;
-  $("champDist").innerHTML = rows.length ? rows.map(([t,c]) =>
-    `<div class="bar-row"><span class="bar-name">${esc(t)}</span><span class="bar-track"><span class="bar-fill" style="width:${(c/max*100).toFixed(0)}%"></span></span><span class="bar-val">${c}</span></div>`).join("")
-    : '<p class="hint">No champion picks yet.</p>';
+  const s = STATE.stats || {};
+  renderDist("distChampion", s.champion, "No champion picks yet.");
+  renderDist("distFn", s.fn, "No finalist picks yet.");
+  renderDist("distSf", s.sf, "No semi-finalist picks yet.");
+  renderDist("distQf", s.qf, "No quarter-finalist picks yet.");
+  const g = s.groups || {};
+  $("distGroups").innerHTML = STATE.groups.map(grp => {
+    const bars = distBars(g[grp.id]) || '<p class="hint">No picks yet.</p>';
+    return `<div style="margin-bottom:10px"><strong style="color:var(--brand);font-size:13px">${esc(grp.name)}</strong>${bars}</div>`;
+  }).join("");
 }
 function renderBoard() {
   const b = $("boardBody"); b.innerHTML = "";
@@ -389,28 +426,6 @@ function renderAdminForms() {
       g.teams.map((t, ti) => `<input type="text" data-g="${gi}" data-t="${ti}" value="${esc(t)}" style="margin-top:6px" />`).join("");
     ge.appendChild(box);
   });
-  const rg = $("resGroups"); rg.innerHTML = "";
-  STATE.groups.forEach(g => {
-    const box = document.createElement("div"); box.className = "group-box";
-    const opts = ['<option value="">— winner —</option>'].concat(g.teams.map(t => `<option>${esc(t)}</option>`)).join("");
-    box.innerHTML = `<strong>${esc(g.name)}</strong><select data-gid="${esc(g.id)}">${opts}</select>`;
-    const sel = box.querySelector("select"); sel.value = adminRes.groups[g.id] || "";
-    sel.onchange = () => adminRes.groups[g.id] = sel.value;
-    rg.appendChild(box);
-  });
-  const teams = allTeams();
-  buildPills($("resQf"), teams, adminRes.qf, REQ.qf, $("rcQf"));
-  buildPills($("resSf"), teams, adminRes.sf, REQ.sf, $("rcSf"));
-  buildPills($("resFn"), teams, adminRes.fn, REQ.fn, $("rcFn"));
-  const rc = $("resChampion");
-  rc.innerHTML = '<option value="">— none yet —</option>' + teams.map(t => `<option>${esc(t)}</option>`).join("");
-  rc.value = adminRes.champion; rc.onchange = () => adminRes.champion = rc.value;
-}
-function loadResultsIntoAdmin() {
-  const r = STATE.results || {};
-  adminRes.groups = { ...(r.groups||{}) };
-  adminRes.qf = new Set(r.qf||[]); adminRes.sf = new Set(r.sf||[]); adminRes.fn = new Set(r.fn||[]);
-  adminRes.champion = r.champion || "";
 }
 const adminPost = (action, extra) => post("/api/admin", { pool:POOL, token:TOKEN, action, ...extra });
 function collectGroupsFromEditor() {
@@ -424,7 +439,7 @@ async function unlockAdmin() {
   const r = await adminPost("verify", {});
   if (r.ok) {
     $("adminLogin").classList.add("hidden"); $("adminPanel").classList.remove("hidden");
-    loadResultsIntoAdmin(); renderAdminForms();
+    renderAdminForms();
   } else { flash(r.body.error || "Invalid token", "err"); }
 }
 
@@ -460,6 +475,26 @@ async function countVisit() {
   await post("/api/visit", { pool:POOL }).catch(() => {});
 }
 
+// ---- organizer global-results editor (home) ----
+function renderOrgResults() {
+  const rg = $("resGroups"); rg.innerHTML = "";
+  ORG_GROUPS.forEach(g => {
+    const box = document.createElement("div"); box.className = "group-box";
+    const opts = ['<option value="">— winner —</option>'].concat(g.teams.map(t => `<option>${esc(t)}</option>`)).join("");
+    box.innerHTML = `<strong>${esc(g.name)}</strong><select data-gid="${esc(g.id)}">${opts}</select>`;
+    const sel = box.querySelector("select"); sel.value = adminRes.groups[g.id] || "";
+    sel.onchange = () => adminRes.groups[g.id] = sel.value;
+    rg.appendChild(box);
+  });
+  const teams = ORG_GROUPS.flatMap(g => g.teams);
+  buildPills($("resQf"), teams, adminRes.qf, REQ.qf, $("rcQf"));
+  buildPills($("resSf"), teams, adminRes.sf, REQ.sf, $("rcSf"));
+  buildPills($("resFn"), teams, adminRes.fn, REQ.fn, $("rcFn"));
+  const rc = $("resChampion");
+  rc.innerHTML = '<option value="">— none yet —</option>' + teams.map(t => `<option>${esc(t)}</option>`).join("");
+  rc.value = adminRes.champion; rc.onchange = () => adminRes.champion = rc.value;
+}
+
 // ---- home (create / manage) ----
 function wireHome() {
   $("createBtn").onclick = async () => {
@@ -486,6 +521,25 @@ function wireHome() {
     $("poolList").innerHTML = r.body.pools.length ? r.body.pools.map(p =>
       `<div class="group-box" style="margin-bottom:8px"><strong>${esc(p.name)}</strong> — ${p.players} players<br><a href="${base}?pool=${p.poolId}">open play link</a></div>`).join("")
       : '<p class="hint">No pools yet.</p>';
+  };
+  $("loadResultsBtn").onclick = async () => {
+    const code = $("listCode").value; if (!code) return flash("Enter owner code.", "err");
+    const r = await post("/api/admin", { action:"getResults", code });
+    if (!r.ok) return flash(r.body.error || "Failed", "err");
+    ORG_GROUPS = r.body.groups || [];
+    const res = r.body.results || {};
+    adminRes.groups = { ...(res.groups||{}) };
+    adminRes.qf = new Set(res.qf||[]); adminRes.sf = new Set(res.sf||[]); adminRes.fn = new Set(res.fn||[]);
+    adminRes.champion = res.champion || "";
+    renderOrgResults(); $("orgResults").classList.remove("hidden");
+    flash("Results loaded — edit and save.", "ok");
+  };
+  $("saveResults").onclick = async () => {
+    const code = $("listCode").value; if (!code) return flash("Enter owner code.", "err");
+    const results = { groups:adminRes.groups, qf:[...adminRes.qf], sf:[...adminRes.sf], fn:[...adminRes.fn], champion:adminRes.champion };
+    const r = await post("/api/admin", { action:"setResults", code, results });
+    if (r.ok) flash(`Official results saved — rescored ${r.body.rescored} pool(s).`, "ok");
+    else flash(r.body.error || "Failed", "err");
   };
 }
 
@@ -516,11 +570,6 @@ function wirePool() {
     const r = await adminPost("setPoints", { points });
     if (r.ok) { flash("Scoring saved.", "ok"); await loadState(); } else flash(r.body.error||"Failed","err");
   };
-  $("saveResults").onclick = async () => {
-    const results = { groups:adminRes.groups, qf:[...adminRes.qf], sf:[...adminRes.sf], fn:[...adminRes.fn], champion:adminRes.champion };
-    const r = await adminPost("setResults", { results });
-    if (r.ok) { flash("Results saved. Leaderboard recalculated.", "ok"); await loadState(); } else flash(r.body.error||"Failed","err");
-  };
   $("loadEntries").onclick = async () => {
     const r = await adminPost("entries", {});
     if (!r.ok) return flash(r.body.error||"Failed","err");
@@ -536,7 +585,7 @@ function wirePool() {
   $("resetBtn").onclick = async () => {
     if (!confirm("Delete ALL entries and results for this pool? Branding and groups are kept.")) return;
     const r = await adminPost("reset", {});
-    if (r.ok) { flash("Entries and results cleared.", "ok"); await loadState(); loadResultsIntoAdmin(); renderAdminForms(); } else flash(r.body.error||"Failed","err");
+    if (r.ok) { flash("Entries cleared.", "ok"); await loadState(); renderAdminForms(); } else flash(r.body.error||"Failed","err");
   };
   $("deleteBtn").onclick = async () => {
     if (!confirm("Permanently DELETE this entire pool? This frees a pool slot and cannot be undone.")) return;

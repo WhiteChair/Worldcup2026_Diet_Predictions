@@ -2,11 +2,12 @@ import {
   getRedis,
   K,
   getConfig,
-  getResults,
+  getGlobalResults,
   poolExists,
   validatePrediction,
   normName,
-  scoreOf,
+  buildBoard,
+  buildStats,
   MAX_PLAYERS_PER_POOL,
   touchExpiry,
   isKilled,
@@ -31,11 +32,8 @@ export default async function handler(req, res) {
     const redis = getRedis();
     const k = K(poolId);
 
-    // Player cap (cost containment). Small race tolerated; the hard ceiling is the SADD below.
     const count = await redis.scard(k.names);
-    if (count >= MAX_PLAYERS_PER_POOL) {
-      return res.status(409).json({ error: "This pool is full." });
-    }
+    if (count >= MAX_PLAYERS_PER_POOL) return res.status(409).json({ error: "This pool is full." });
 
     const nameKey = normName(body.name);
     const added = await redis.sadd(k.names, nameKey);
@@ -52,13 +50,13 @@ export default async function handler(req, res) {
     };
     await redis.rpush(k.preds, JSON.stringify(pred));
 
-    // Incrementally update the cached board: score the new entry against current results, insert, re-sort.
-    const results = await getResults(poolId);
-    const boardRaw = await redis.get(k.board);
-    const board = boardRaw ? (typeof boardRaw === "string" ? JSON.parse(boardRaw) : boardRaw) : [];
-    board.push({ name: pred.name, champion: pred.champion, score: scoreOf(pred, results, cfg.points), ts: pred.ts });
-    board.sort((a, b) => b.score - a.score || a.ts - b.ts);
-    await redis.set(k.board, JSON.stringify(board));
+    // Rebuild caches from all entries (pool capped at 250, so a full rebuild is cheap and always correct).
+    const [results, predsRaw] = await Promise.all([getGlobalResults(), redis.lrange(k.preds, 0, -1)]);
+    const preds = predsRaw.map((p) => (typeof p === "string" ? JSON.parse(p) : p));
+    await Promise.all([
+      redis.set(k.board, JSON.stringify(buildBoard(preds, results, cfg.points))),
+      redis.set(k.stats, JSON.stringify(buildStats(preds))),
+    ]);
     await touchExpiry(redis, poolId);
 
     return res.status(200).json({ ok: true });

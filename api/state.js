@@ -1,4 +1,4 @@
-import { getRedis, K, getConfig, getResults, poolExists, isKilled, KILL_TS, cors } from "../lib/store.js";
+import { getRedis, K, getConfig, getGlobalResults, poolExists, isKilled, KILL_TS, cors } from "../lib/store.js";
 
 export default async function handler(req, res) {
   cors(res);
@@ -13,19 +13,21 @@ export default async function handler(req, res) {
 
     const redis = getRedis();
     const k = K(poolId);
-    // Cheap read path: config + results + cached board + visits. Never scans 6000 raw entries.
-    const [cfg, results, boardRaw, visitsRaw] = await Promise.all([
+    // Cheap read path: config + global results + cached board + cached stats + visits.
+    const [cfg, results, boardRaw, statsRaw, visitsRaw] = await Promise.all([
       getConfig(poolId),
-      getResults(poolId),
+      getGlobalResults(),
       redis.get(k.board),
+      redis.get(k.stats),
       redis.get(k.visits),
     ]);
 
     const board = boardRaw ? (typeof boardRaw === "string" ? JSON.parse(boardRaw) : boardRaw) : [];
-
-    // Champion distribution computed in-memory from the compact board (no extra Redis).
-    const champCounts = {};
-    for (const p of board) if (p.champion) champCounts[p.champion] = (champCounts[p.champion] || 0) + 1;
+    const stats = statsRaw
+      ? typeof statsRaw === "string"
+        ? JSON.parse(statsRaw)
+        : statsRaw
+      : { champion: {}, fn: {}, sf: {}, qf: {}, groups: {} };
 
     return res.status(200).json({
       killed: isKilled(),
@@ -35,9 +37,9 @@ export default async function handler(req, res) {
       groups: cfg.groups,
       points: cfg.points,
       structure: { qf: 8, sf: 4, fn: 2 },
-      results,
+      results, // global, same for every pool
       predictions: board,
-      champCounts,
+      stats,
       visits: Number(visitsRaw || 0),
       total: board.length,
     });

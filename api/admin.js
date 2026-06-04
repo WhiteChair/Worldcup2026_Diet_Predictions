@@ -4,15 +4,18 @@ import {
   K,
   getConfig,
   setConfig,
-  getResults,
+  getGlobalResults,
+  setGlobalResults,
   poolExists,
   scoreOf,
   buildBoard,
+  buildStats,
   checkCode,
   checkPoolAuth,
   touchExpiry,
   isKilled,
   DEFAULT_POINTS,
+  DEFAULT_GROUPS,
   cors,
 } from "../lib/store.js";
 
@@ -54,24 +57,19 @@ function sanitizePoints(p = {}) {
   return out;
 }
 
-function sanitizeResults(r = {}, cfg) {
+// Global results are validated against the canonical real-draw teams (DEFAULT_GROUPS).
+function sanitizeResults(r = {}) {
   const teamSet = new Set();
-  for (const g of cfg.groups) for (const t of g.teams) teamSet.add(t);
+  for (const g of DEFAULT_GROUPS) for (const t of g.teams) teamSet.add(t);
   const groups = {};
   if (r.groups && typeof r.groups === "object") {
-    for (const g of cfg.groups) {
+    for (const g of DEFAULT_GROUPS) {
       const v = r.groups[g.id];
       if (v && g.teams.includes(v)) groups[g.id] = v;
     }
   }
   const arr = (a) => (Array.isArray(a) ? [...new Set(a.filter((t) => teamSet.has(t)))] : []);
-  return {
-    groups,
-    qf: arr(r.qf),
-    sf: arr(r.sf),
-    fn: arr(r.fn),
-    champion: r.champion && teamSet.has(r.champion) ? r.champion : "",
-  };
+  return { groups, qf: arr(r.qf), sf: arr(r.sf), fn: arr(r.fn), champion: r.champion && teamSet.has(r.champion) ? r.champion : "" };
 }
 
 async function readPreds(redis, poolId) {
@@ -79,12 +77,20 @@ async function readPreds(redis, poolId) {
   return (raw || []).map((p) => (typeof p === "string" ? JSON.parse(p) : p));
 }
 
-// Full recompute of the cached board (used when results or scoring change for everyone).
-async function rebuildBoard(redis, poolId) {
-  const [cfg, results, preds] = await Promise.all([getConfig(poolId), getResults(poolId), readPreds(redis, poolId)]);
-  const board = buildBoard(preds, results, cfg.points);
-  await redis.set(K(poolId).board, JSON.stringify(board));
-  return board;
+// Rebuild a pool's cached board + stats from its entries against the current global results.
+async function rebuildCaches(redis, poolId) {
+  const [cfg, results, preds] = await Promise.all([getConfig(poolId), getGlobalResults(), readPreds(redis, poolId)]);
+  await Promise.all([
+    redis.set(K(poolId).board, JSON.stringify(buildBoard(preds, results, cfg.points))),
+    redis.set(K(poolId).stats, JSON.stringify(buildStats(preds))),
+  ]);
+}
+
+// Rescore every pool (after global results change).
+async function rebuildAll(redis) {
+  const ids = await redis.smembers(POOLS_KEY);
+  for (const id of ids) await rebuildCaches(redis, id);
+  return ids.length;
 }
 
 export default async function handler(req, res) {
@@ -102,19 +108,33 @@ export default async function handler(req, res) {
   const redis = getRedis();
   const { action, code, token } = body;
 
-  // Deployer-only action: list every pool. Gated by ADMIN_CODE.
-  if (action === "list") {
-    if (!checkCode(code)) return res.status(401).json({ error: "Invalid admin code" });
-    const ids = await redis.smembers(POOLS_KEY);
-    const pools = [];
-    for (const id of ids) {
-      const [cfg, count] = await Promise.all([getConfig(id), redis.scard(K(id).names)]);
-      pools.push({ poolId: id, name: cfg.brand.name, players: Number(count || 0), initialized: cfg.initialized });
+  // ---- Organizer-only actions (gated by ADMIN_CODE) ----
+  if (action === "list" || action === "getResults" || action === "setResults") {
+    if (!checkCode(code)) return res.status(401).json({ error: "Invalid owner code" });
+
+    if (action === "list") {
+      const ids = await redis.smembers(POOLS_KEY);
+      const pools = [];
+      for (const id of ids) {
+        const [cfg, count] = await Promise.all([getConfig(id), redis.scard(K(id).names)]);
+        pools.push({ poolId: id, name: cfg.brand.name, players: Number(count || 0), initialized: cfg.initialized });
+      }
+      return res.status(200).json({ ok: true, pools });
     }
-    return res.status(200).json({ ok: true, pools });
+
+    if (action === "getResults") {
+      return res.status(200).json({ ok: true, results: await getGlobalResults(), groups: DEFAULT_GROUPS });
+    }
+
+    // setResults — global, then rescore every pool.
+    if (isKilled()) return res.status(410).json({ error: "Closed." });
+    const results = sanitizeResults(body.results);
+    await setGlobalResults(results);
+    const n = await rebuildAll(redis);
+    return res.status(200).json({ ok: true, results, rescored: n });
   }
 
-  // All other actions operate on a specific pool and require pool auth (token or deployer code).
+  // ---- Per-pool actions (gated by the pool's admin token, or the owner code as master) ----
   const poolId = String(body.pool || "").trim();
   if (!poolId || !(await poolExists(poolId))) return res.status(404).json({ error: "Pool not found" });
   if (!(await checkPoolAuth(poolId, token))) return res.status(401).json({ error: "Invalid admin link / code" });
@@ -126,21 +146,6 @@ export default async function handler(req, res) {
     switch (action) {
       case "verify":
         return res.status(200).json({ ok: true });
-
-      case "setup": {
-        if (killed) return res.status(410).json({ error: "Closed." });
-        const cfg = await getConfig(poolId);
-        const groups = sanitizeGroups(body.groups) || cfg.groups;
-        const next = {
-          initialized: true,
-          brand: sanitizeBrand(body.brand, cfg.brand),
-          groups,
-          points: body.points ? sanitizePoints(body.points) : cfg.points,
-        };
-        await setConfig(poolId, next);
-        await touchExpiry(redis, poolId);
-        return res.status(200).json({ ok: true, config: next });
-      }
 
       case "setBrand": {
         if (killed) return res.status(410).json({ error: "Closed." });
@@ -158,6 +163,7 @@ export default async function handler(req, res) {
         if (!groups) return res.status(400).json({ error: "Need 12 groups of 4 teams, unique ids" });
         cfg.groups = groups;
         await setConfig(poolId, cfg);
+        await rebuildCaches(redis, poolId);
         return res.status(200).json({ ok: true, groups });
       }
 
@@ -166,22 +172,12 @@ export default async function handler(req, res) {
         const cfg = await getConfig(poolId);
         cfg.points = sanitizePoints(body.points);
         await setConfig(poolId, cfg);
-        await rebuildBoard(redis, poolId); // scores changed for everyone
+        await rebuildCaches(redis, poolId);
         return res.status(200).json({ ok: true, points: cfg.points });
       }
 
-      case "setResults": {
-        if (killed) return res.status(410).json({ error: "Closed." });
-        const cfg = await getConfig(poolId);
-        const results = sanitizeResults(body.results, cfg);
-        await redis.set(k.results, JSON.stringify(results));
-        await rebuildBoard(redis, poolId);
-        await touchExpiry(redis, poolId);
-        return res.status(200).json({ ok: true, results });
-      }
-
       case "entries": {
-        const [cfg, results, preds] = await Promise.all([getConfig(poolId), getResults(poolId), readPreds(redis, poolId)]);
+        const [cfg, results, preds] = await Promise.all([getConfig(poolId), getGlobalResults(), readPreds(redis, poolId)]);
         const entries = preds
           .map((p) => ({ ...p, score: scoreOf(p, results, cfg.points) }))
           .sort((a, b) => b.score - a.score);
@@ -189,7 +185,7 @@ export default async function handler(req, res) {
       }
 
       case "export": {
-        const [cfg, results, preds] = await Promise.all([getConfig(poolId), getResults(poolId), readPreds(redis, poolId)]);
+        const [cfg, results, preds] = await Promise.all([getConfig(poolId), getGlobalResults(), readPreds(redis, poolId)]);
         const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
         const head = ["name", ...cfg.groups.map((g) => `winner_${g.id}`), "qf", "sf", "fn", "champion", "score", "submitted"];
         const rows = preds.map((p) =>
@@ -209,20 +205,19 @@ export default async function handler(req, res) {
 
       case "reset": {
         await Promise.all([redis.del(k.preds), redis.del(k.names)]);
-        await redis.set(k.results, JSON.stringify({ groups: {}, qf: [], sf: [], fn: [], champion: "" }));
         await redis.set(k.board, JSON.stringify([]));
+        await redis.set(k.stats, JSON.stringify({ champion: {}, fn: {}, sf: {}, qf: {}, groups: {} }));
         if (body.resetVisits) await redis.del(k.visits);
         return res.status(200).json({ ok: true });
       }
 
-      // Delete the whole pool (frees a slot). Pool auth already verified above.
       case "delete": {
         await Promise.all([
           redis.del(k.config),
-          redis.del(k.results),
           redis.del(k.preds),
           redis.del(k.names),
           redis.del(k.board),
+          redis.del(k.stats),
           redis.del(k.visits),
           redis.del(k.token),
         ]);

@@ -52,7 +52,7 @@ export default async function handler(req, res) {
       setConfig(poolId, cfg),
       redis.set(K(poolId).token, token),
       redis.set(K(poolId).board, JSON.stringify([])),
-      redis.set(K(poolId).results, JSON.stringify({ groups: {}, qf: [], sf: [], fn: [], champion: "" })),
+      redis.set(K(poolId).stats, JSON.stringify({ champion: {}, fn: {}, sf: {}, qf: {}, groups: {} })),
     ]);
     await touchExpiry(redis, poolId);
 
