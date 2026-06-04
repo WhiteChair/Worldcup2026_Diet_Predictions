@@ -7,118 +7,70 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏆</text></svg>" />
 <style>
   :root {
-    --brand: #003da5;
-    --brand-soft: #003da522;
+    --brand: #003da5; --brand-soft: #003da522;
     --accent: linear-gradient(135deg, #f5a623, #e8462c, #f3d250);
-    --bg: #f4f6fb;
-    --card: #ffffff;
-    --ink: #1a2233;
-    --muted: #6b7589;
-    --line: #e3e8f2;
-    --ok: #1f9d55;
-    --bad: #d23f3f;
-    --shadow: 0 2px 14px rgba(20, 40, 90, 0.08);
-    --radius: 14px;
+    --bg: #f4f6fb; --card: #ffffff; --ink: #1a2233; --muted: #6b7589; --line: #e3e8f2;
+    --ok: #1f9d55; --bad: #d23f3f; --shadow: 0 2px 14px rgba(20,40,90,.08); --radius: 14px;
   }
   * { box-sizing: border-box; }
-  body {
-    margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background: var(--bg); color: var(--ink); line-height: 1.5;
-  }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; background:var(--bg); color:var(--ink); line-height:1.5; }
   a { color: var(--brand); }
   .wrap { max-width: 960px; margin: 0 auto; padding: 0 16px 64px; }
-
-  header.hero {
-    background: var(--card); border-bottom: 1px solid var(--line);
-    box-shadow: var(--shadow);
-  }
-  .hero-grad { height: 6px; background: var(--accent); }
-  .hero-inner {
-    max-width: 960px; margin: 0 auto; padding: 20px 16px;
-    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
-  }
-  .hero-logo { width: 56px; height: 56px; object-fit: contain; border-radius: 10px; }
-  .hero-logo.fallback {
-    display: flex; align-items: center; justify-content: center;
-    font-size: 32px; background: var(--brand-soft);
-  }
-  .hero-text h1 { margin: 0; font-size: 22px; color: var(--brand); }
-  .hero-text p { margin: 2px 0 0; color: var(--muted); font-size: 14px; }
-  .stat-strip { margin-left: auto; display: flex; gap: 10px; }
-  .chip {
-    background: var(--brand-soft); color: var(--brand); font-weight: 600;
-    padding: 6px 12px; border-radius: 999px; font-size: 13px; white-space: nowrap;
-  }
-
-  .banner { padding: 10px 14px; border-radius: 10px; margin: 16px 0; font-size: 14px; }
-  .banner.err { background: #fdecec; color: var(--bad); border: 1px solid #f3c0c0; }
-  .banner.warn { background: #fff7e6; color: #8a5a00; border: 1px solid #f3dca0; }
-  .banner.ok { background: #eaf7ef; color: var(--ok); border: 1px solid #b8e3c8; }
-  .hidden { display: none !important; }
-
-  nav.tabs { display: flex; gap: 6px; margin: 20px 0; flex-wrap: wrap; }
-  nav.tabs button {
-    border: 1px solid var(--line); background: var(--card); color: var(--ink);
-    padding: 10px 18px; border-radius: 999px; cursor: pointer; font-size: 14px; font-weight: 600;
-  }
-  nav.tabs button.active { background: var(--brand); color: #fff; border-color: var(--brand); }
-
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
-  .card h2 { margin: 0 0 4px; font-size: 18px; color: var(--brand); }
-  .card h3 { margin: 18px 0 8px; font-size: 15px; }
-  .hint { color: var(--muted); font-size: 13px; margin: 0 0 14px; }
-
-  label { display: block; font-size: 13px; font-weight: 600; margin: 12px 0 4px; }
-  input[type=text], input[type=password], input[type=number], select {
-    width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px;
-    font-size: 14px; background: #fff; color: var(--ink);
-  }
-  input:focus, select:focus { outline: 2px solid var(--brand-soft); border-color: var(--brand); }
-
-  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .group-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
-  .group-box { border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
-  .group-box strong { color: var(--brand); font-size: 13px; }
-
-  .pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
-  .pill {
-    border: 1px solid var(--line); background: #fff; color: var(--ink);
-    padding: 7px 13px; border-radius: 999px; cursor: pointer; font-size: 13px; user-select: none;
-  }
-  .pill.sel { background: var(--brand); color: #fff; border-color: var(--brand); }
-  .pill.dim { opacity: .4; cursor: not-allowed; }
-  .counter { font-size: 12px; color: var(--muted); font-weight: 600; }
-  .counter.done { color: var(--ok); }
-
-  button.primary {
-    background: var(--brand); color: #fff; border: none; padding: 12px 22px;
-    border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 16px;
-  }
-  button.primary:disabled { opacity: .5; cursor: not-allowed; }
-  button.ghost {
-    background: #fff; color: var(--brand); border: 1px solid var(--brand);
-    padding: 9px 16px; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 13px;
-  }
-  button.danger { background: var(--bad); color: #fff; border: none; padding: 9px 16px; border-radius: 10px; font-weight: 600; cursor: pointer; }
-
-  table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); }
-  th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
-  td.score { font-weight: 700; text-align: right; }
-  .rank { color: var(--muted); width: 36px; }
-  tr.top1 td.score { color: var(--brand); }
-
-  .bar-row { display: flex; align-items: center; gap: 10px; margin: 6px 0; font-size: 13px; }
-  .bar-name { width: 130px; flex: none; }
-  .bar-track { flex: 1; background: var(--line); border-radius: 6px; overflow: hidden; height: 16px; }
-  .bar-fill { height: 100%; background: var(--brand); }
-  .bar-val { width: 44px; text-align: right; color: var(--muted); }
-
-  .row-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
-  details.adminsec { margin-top: 14px; border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
-  details.adminsec summary { font-weight: 700; cursor: pointer; color: var(--brand); }
-  .logo-preview { max-height: 48px; margin-top: 8px; }
-  @media (max-width: 560px) { .grid2 { grid-template-columns: 1fr; } .stat-strip { width: 100%; margin: 8px 0 0; } }
+  header.hero { background:var(--card); border-bottom:1px solid var(--line); box-shadow:var(--shadow); }
+  .hero-grad { height:6px; background:var(--accent); }
+  .hero-inner { max-width:960px; margin:0 auto; padding:20px 16px; display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+  .hero-logo { width:56px; height:56px; object-fit:contain; border-radius:10px; }
+  .hero-logo.fallback { display:flex; align-items:center; justify-content:center; font-size:32px; background:var(--brand-soft); }
+  .hero-text h1 { margin:0; font-size:22px; color:var(--brand); }
+  .hero-text p { margin:2px 0 0; color:var(--muted); font-size:14px; }
+  .stat-strip { margin-left:auto; display:flex; gap:10px; }
+  .chip { background:var(--brand-soft); color:var(--brand); font-weight:600; padding:6px 12px; border-radius:999px; font-size:13px; white-space:nowrap; }
+  .banner { padding:10px 14px; border-radius:10px; margin:16px 0; font-size:14px; }
+  .banner.err { background:#fdecec; color:var(--bad); border:1px solid #f3c0c0; }
+  .banner.warn { background:#fff7e6; color:#8a5a00; border:1px solid #f3dca0; }
+  .banner.ok { background:#eaf7ef; color:var(--ok); border:1px solid #b8e3c8; }
+  .hidden { display:none !important; }
+  nav.tabs { display:flex; gap:6px; margin:20px 0; flex-wrap:wrap; }
+  nav.tabs button { border:1px solid var(--line); background:var(--card); color:var(--ink); padding:10px 18px; border-radius:999px; cursor:pointer; font-size:14px; font-weight:600; }
+  nav.tabs button.active { background:var(--brand); color:#fff; border-color:var(--brand); }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:20px; box-shadow:var(--shadow); margin-bottom:16px; }
+  .card h2 { margin:0 0 4px; font-size:18px; color:var(--brand); }
+  .card h3 { margin:18px 0 8px; font-size:15px; }
+  .hint { color:var(--muted); font-size:13px; margin:0 0 14px; }
+  label { display:block; font-size:13px; font-weight:600; margin:12px 0 4px; }
+  input[type=text],input[type=password],input[type=number],select { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px; font-size:14px; background:#fff; color:var(--ink); }
+  input:focus,select:focus { outline:2px solid var(--brand-soft); border-color:var(--brand); }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .group-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px; }
+  .group-box { border:1px solid var(--line); border-radius:10px; padding:12px; }
+  .group-box strong { color:var(--brand); font-size:13px; }
+  .pills { display:flex; flex-wrap:wrap; gap:8px; margin-top:6px; }
+  .pill { border:1px solid var(--line); background:#fff; color:var(--ink); padding:7px 13px; border-radius:999px; cursor:pointer; font-size:13px; user-select:none; }
+  .pill.sel { background:var(--brand); color:#fff; border-color:var(--brand); }
+  .pill.dim { opacity:.4; cursor:not-allowed; }
+  .counter { font-size:12px; color:var(--muted); font-weight:600; }
+  .counter.done { color:var(--ok); }
+  button.primary { background:var(--brand); color:#fff; border:none; padding:12px 22px; border-radius:10px; font-size:15px; font-weight:700; cursor:pointer; margin-top:16px; }
+  button.primary:disabled { opacity:.5; cursor:not-allowed; }
+  button.ghost { background:#fff; color:var(--brand); border:1px solid var(--brand); padding:9px 16px; border-radius:10px; font-weight:600; cursor:pointer; font-size:13px; }
+  button.danger { background:var(--bad); color:#fff; border:none; padding:9px 16px; border-radius:10px; font-weight:600; cursor:pointer; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th,td { text-align:left; padding:9px 10px; border-bottom:1px solid var(--line); }
+  th { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+  td.score { font-weight:700; text-align:right; }
+  .rank { color:var(--muted); width:36px; }
+  tr.top1 td.score { color:var(--brand); }
+  .bar-row { display:flex; align-items:center; gap:10px; margin:6px 0; font-size:13px; }
+  .bar-name { width:130px; flex:none; }
+  .bar-track { flex:1; background:var(--line); border-radius:6px; overflow:hidden; height:16px; }
+  .bar-fill { height:100%; background:var(--brand); }
+  .bar-val { width:44px; text-align:right; color:var(--muted); }
+  .row-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+  .logo-preview { max-height:48px; margin-top:8px; }
+  .linkbox { background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:13px; word-break:break-all; margin:6px 0; }
+  .center { text-align:center; }
+  .big-emoji { font-size:64px; }
+  @media (max-width:560px) { .grid2 { grid-template-columns:1fr; } .stat-strip { width:100%; margin:8px 0 0; } }
 </style>
 </head>
 <body>
@@ -130,7 +82,7 @@
       <h1 id="brandName">Tournament Predictor</h1>
       <p id="brandTagline">Predict the bracket. Top the leaderboard.</p>
     </div>
-    <div class="stat-strip">
+    <div class="stat-strip" id="statStrip">
       <span class="chip" id="chipVisits">👁 — visits</span>
       <span class="chip" id="chipPreds">📝 — entries</span>
     </div>
@@ -138,197 +90,206 @@
 </header>
 
 <div class="wrap">
-  <div id="offlineBanner" class="banner err hidden">⚠ Backend unreachable — submissions disabled. Try mobile data or contact your admin.</div>
-  <div id="setupBanner" class="banner warn hidden">⚙ Not set up yet. Admin: open the <b>Admin</b> tab to brand this site and load real teams.</div>
+  <div id="offlineBanner" class="banner err hidden">⚠ Backend unreachable — try again shortly or contact your admin.</div>
   <div id="flash" class="banner hidden"></div>
 
-  <nav class="tabs">
-    <button data-tab="predict" class="active">Predict</button>
-    <button data-tab="stats">Live Stats</button>
-    <button data-tab="board">Leaderboard</button>
-    <button data-tab="admin">Admin</button>
-  </nav>
-
-  <!-- PREDICT -->
-  <section id="tab-predict">
+  <!-- ===================== HOME (no pool selected) ===================== -->
+  <section id="homeView" class="hidden">
     <div class="card">
-      <h2>Make your prediction</h2>
-      <p class="hint">One entry per person. Picks lock in as soon as you submit.</p>
-      <label>Your name</label>
-      <input type="text" id="pName" placeholder="e.g. Jordan Smith" maxlength="60" />
+      <h2>Run an office prediction pool</h2>
+      <p class="hint">This site can host up to <b>10 pools</b>, each with up to <b>6000 players</b>. Create one below, share the play link with your office, and keep the admin link private.</p>
+      <label>Pool name</label>
+      <input type="text" id="newPoolName" placeholder="e.g. Acme Corp World Cup Sweepstake" maxlength="80" />
+      <label>Owner code</label>
+      <input type="password" id="ownerCode" placeholder="the ADMIN_CODE set on deploy" />
+      <p class="hint">This is the secret you set as <code>ADMIN_CODE</code> when deploying. Only you should know it.</p>
+      <button class="primary" id="createBtn">Create pool</button>
+    </div>
 
-      <h3>Group winners</h3>
-      <div id="groupWinners" class="group-grid"></div>
+    <div id="createdCard" class="card hidden">
+      <h2>✅ Pool created</h2>
+      <p class="hint">Save both links now. The admin link is the only way back into management — treat it like a password.</p>
+      <h3>Play link — share with your office</h3>
+      <div class="linkbox" id="playLink"></div>
+      <button class="ghost" id="copyPlay">Copy play link</button>
+      <h3>Admin link — keep private</h3>
+      <div class="linkbox" id="adminLink"></div>
+      <button class="ghost" id="copyAdmin">Copy admin link</button>
+      <p class="hint" style="margin-top:14px"><a id="goAdmin" href="#">→ Open this pool's admin now</a></p>
+    </div>
 
-      <h3>Quarter-finalists <span class="counter" id="cQf">0 / 8</span></h3>
-      <p class="hint">Pick the 8 teams you think reach the quarter-finals.</p>
-      <div id="qfPills" class="pills"></div>
-
-      <h3>Semi-finalists <span class="counter" id="cSf">0 / 4</span></h3>
-      <div id="sfPills" class="pills"></div>
-
-      <h3>Finalists <span class="counter" id="cFn">0 / 2</span></h3>
-      <div id="fnPills" class="pills"></div>
-
-      <h3>Champion 🏆</h3>
-      <select id="champion"><option value="">— select champion —</option></select>
-
-      <button class="primary" id="submitBtn">Submit prediction</button>
+    <div class="card">
+      <h2>Manage existing pools</h2>
+      <p class="hint">Enter your owner code to list pools you've created.</p>
+      <input type="password" id="listCode" placeholder="owner code" />
+      <button class="ghost" id="listBtn" style="margin-top:10px">List pools</button>
+      <div id="poolList" style="margin-top:14px"></div>
     </div>
   </section>
 
-  <!-- STATS -->
-  <section id="tab-stats" class="hidden">
-    <div class="card">
-      <h2>Live stats</h2>
-      <p class="hint">What the office is predicting.</p>
-      <div class="grid2" style="margin-bottom:14px">
-        <div class="group-box"><strong>Total entries</strong><div id="statTotal" style="font-size:28px;font-weight:800">0</div></div>
-        <div class="group-box"><strong>Page visits</strong><div id="statVisits" style="font-size:28px;font-weight:800">0</div></div>
-      </div>
-      <h3>Champion picks</h3>
-      <div id="champDist"></div>
+  <!-- ===================== KILL (after shutdown date) ===================== -->
+  <section id="killView" class="hidden">
+    <div class="card center">
+      <div class="big-emoji">🏁</div>
+      <h2>This contest has finished</h2>
+      <p class="hint" id="killMsg">The tournament is over and this predictor has closed.</p>
     </div>
   </section>
 
-  <!-- BOARD -->
-  <section id="tab-board" class="hidden">
-    <div class="card">
-      <h2>Leaderboard</h2>
-      <p class="hint">Scores update as the admin enters official results.</p>
-      <table>
-        <thead><tr><th class="rank">#</th><th>Name</th><th>Champion pick</th><th style="text-align:right">Score</th></tr></thead>
-        <tbody id="boardBody"></tbody>
-      </table>
-      <p class="hint" id="boardEmpty">No entries yet.</p>
-    </div>
-  </section>
+  <!-- ===================== POOL (predictor) ===================== -->
+  <section id="poolView" class="hidden">
+    <div id="setupBanner" class="banner warn hidden">⚙ This pool isn't branded yet. Admin: open the <b>Admin</b> tab to set it up.</div>
 
-  <!-- ADMIN -->
-  <section id="tab-admin" class="hidden">
-    <div class="card" id="adminLogin">
-      <h2>Admin</h2>
-      <p class="hint">Enter the admin code (set as the <code>ADMIN_CODE</code> env var on deploy).</p>
-      <label>Admin code</label>
-      <input type="password" id="adminCode" placeholder="••••••••" />
-      <button class="primary" id="adminUnlock">Unlock</button>
-    </div>
+    <nav class="tabs">
+      <button data-tab="predict" class="active">Predict</button>
+      <button data-tab="stats">Live Stats</button>
+      <button data-tab="board">Leaderboard</button>
+      <button data-tab="admin">Admin</button>
+    </nav>
 
-    <div id="adminPanel" class="hidden">
+    <section id="tab-predict">
       <div class="card">
-        <h2>Branding</h2>
-        <p class="hint">Make this site your own. Changes are live immediately.</p>
-        <div class="grid2">
-          <div><label>Company / contest name</label><input type="text" id="bName" maxlength="80" /></div>
-          <div><label>Brand color (hex)</label><input type="text" id="bColor" placeholder="#003da5" maxlength="7" /></div>
-        </div>
-        <label>Tagline</label>
-        <input type="text" id="bTagline" maxlength="160" />
-        <label>Logo URL (hosted image) — or upload below</label>
-        <input type="text" id="bLogoUrl" placeholder="https://…/logo.png" />
-        <label>Upload logo (stored inline, &lt; 300KB)</label>
-        <input type="file" id="bLogoFile" accept="image/*" />
-        <img id="logoPrev" class="logo-preview hidden" />
-        <button class="primary" id="saveBrand">Save branding</button>
-      </div>
-
-      <div class="card">
-        <h2>Teams &amp; groups</h2>
-        <p class="hint">12 groups, 4 teams each. Edit names to match the real draw.</p>
-        <div id="groupEditor" class="group-grid"></div>
-        <button class="primary" id="saveGroups">Save groups</button>
-      </div>
-
-      <div class="card">
-        <h2>Scoring</h2>
-        <div class="group-grid" id="pointsEditor">
-          <div><label>Group winner</label><input type="number" id="pGroup" /></div>
-          <div><label>Quarter-finalist</label><input type="number" id="pQf" /></div>
-          <div><label>Semi-finalist</label><input type="number" id="pSf" /></div>
-          <div><label>Finalist</label><input type="number" id="pFn" /></div>
-          <div><label>Champion</label><input type="number" id="pChampion" /></div>
-          <div><label>Wrong pick penalty</label><input type="number" id="pWrong" /></div>
-        </div>
-        <button class="primary" id="savePoints">Save scoring</button>
-      </div>
-
-      <div class="card">
-        <h2>Official results</h2>
-        <p class="hint">Enter results as each stage completes. Leaderboard recalculates instantly.</p>
+        <h2>Make your prediction</h2>
+        <p class="hint">One entry per person. Picks lock in as soon as you submit.</p>
+        <label>Your name</label>
+        <input type="text" id="pName" placeholder="e.g. Jordan Smith" maxlength="60" />
         <h3>Group winners</h3>
-        <div id="resGroups" class="group-grid"></div>
-        <h3>Quarter-finalists <span class="counter" id="rcQf">0 / 8</span></h3>
-        <div id="resQf" class="pills"></div>
-        <h3>Semi-finalists <span class="counter" id="rcSf">0 / 4</span></h3>
-        <div id="resSf" class="pills"></div>
-        <h3>Finalists <span class="counter" id="rcFn">0 / 2</span></h3>
-        <div id="resFn" class="pills"></div>
-        <h3>Champion</h3>
-        <select id="resChampion"><option value="">— none yet —</option></select>
-        <button class="primary" id="saveResults">Save results</button>
+        <div id="groupWinners" class="group-grid"></div>
+        <h3>Quarter-finalists <span class="counter" id="cQf">0 / 8</span></h3>
+        <p class="hint">Pick the 8 teams you think reach the quarter-finals.</p>
+        <div id="qfPills" class="pills"></div>
+        <h3>Semi-finalists <span class="counter" id="cSf">0 / 4</span></h3>
+        <div id="sfPills" class="pills"></div>
+        <h3>Finalists <span class="counter" id="cFn">0 / 2</span></h3>
+        <div id="fnPills" class="pills"></div>
+        <h3>Champion 🏆</h3>
+        <select id="champion"><option value="">— select champion —</option></select>
+        <button class="primary" id="submitBtn">Submit prediction</button>
+      </div>
+    </section>
+
+    <section id="tab-stats" class="hidden">
+      <div class="card">
+        <h2>Live stats</h2>
+        <div class="grid2" style="margin-bottom:14px">
+          <div class="group-box"><strong>Total entries</strong><div id="statTotal" style="font-size:28px;font-weight:800">0</div></div>
+          <div class="group-box"><strong>Page visits</strong><div id="statVisits" style="font-size:28px;font-weight:800">0</div></div>
+        </div>
+        <h3>Champion picks</h3>
+        <div id="champDist"></div>
+      </div>
+    </section>
+
+    <section id="tab-board" class="hidden">
+      <div class="card">
+        <h2>Leaderboard</h2>
+        <p class="hint">Scores update as the admin enters official results.</p>
+        <table><thead><tr><th class="rank">#</th><th>Name</th><th>Champion pick</th><th style="text-align:right">Score</th></tr></thead><tbody id="boardBody"></tbody></table>
+        <p class="hint" id="boardEmpty">No entries yet.</p>
+      </div>
+    </section>
+
+    <section id="tab-admin" class="hidden">
+      <div class="card" id="adminLogin">
+        <h2>Pool admin</h2>
+        <p class="hint">Open your private <b>admin link</b>, or paste your pool admin token / owner code below.</p>
+        <label>Admin token or owner code</label>
+        <input type="password" id="adminToken" placeholder="••••••••" />
+        <button class="primary" id="adminUnlock">Unlock</button>
       </div>
 
-      <div class="card">
-        <h2>Entries &amp; data</h2>
-        <div class="row-actions">
-          <button class="ghost" id="loadEntries">Load entries</button>
-          <button class="ghost" id="exportCsv">Export CSV</button>
-          <button class="danger" id="resetBtn">Reset entries &amp; results</button>
+      <div id="adminPanel" class="hidden">
+        <div class="card">
+          <h2>Share links</h2>
+          <h3>Play link</h3><div class="linkbox" id="aPlayLink"></div>
+          <h3>Admin link (private)</h3><div class="linkbox" id="aAdminLink"></div>
         </div>
-        <div id="entriesWrap" style="margin-top:14px"></div>
+        <div class="card">
+          <h2>Branding</h2>
+          <div class="grid2">
+            <div><label>Contest name</label><input type="text" id="bName" maxlength="80" /></div>
+            <div><label>Brand color (hex)</label><input type="text" id="bColor" placeholder="#003da5" maxlength="7" /></div>
+          </div>
+          <label>Tagline</label><input type="text" id="bTagline" maxlength="160" />
+          <label>Logo URL (hosted image) — or upload below</label><input type="text" id="bLogoUrl" placeholder="https://…/logo.png" />
+          <label>Upload logo (inline, &lt; 300KB)</label><input type="file" id="bLogoFile" accept="image/*" />
+          <img id="logoPrev" class="logo-preview hidden" />
+          <button class="primary" id="saveBrand">Save branding</button>
+        </div>
+        <div class="card">
+          <h2>Teams &amp; groups</h2>
+          <p class="hint">12 groups, 4 teams each. Match the real draw.</p>
+          <div id="groupEditor" class="group-grid"></div>
+          <button class="primary" id="saveGroups">Save groups</button>
+        </div>
+        <div class="card">
+          <h2>Scoring</h2>
+          <div class="group-grid">
+            <div><label>Group winner</label><input type="number" id="pGroup" /></div>
+            <div><label>Quarter-finalist</label><input type="number" id="pQf" /></div>
+            <div><label>Semi-finalist</label><input type="number" id="pSf" /></div>
+            <div><label>Finalist</label><input type="number" id="pFn" /></div>
+            <div><label>Champion</label><input type="number" id="pChampion" /></div>
+            <div><label>Wrong pick penalty</label><input type="number" id="pWrong" /></div>
+          </div>
+          <button class="primary" id="savePoints">Save scoring</button>
+        </div>
+        <div class="card">
+          <h2>Official results</h2>
+          <p class="hint">Enter results as each stage completes. Leaderboard recalculates instantly. Leave everything blank to keep all scores at 0.</p>
+          <h3>Group winners</h3><div id="resGroups" class="group-grid"></div>
+          <h3>Quarter-finalists <span class="counter" id="rcQf">0 / 8</span></h3><div id="resQf" class="pills"></div>
+          <h3>Semi-finalists <span class="counter" id="rcSf">0 / 4</span></h3><div id="resSf" class="pills"></div>
+          <h3>Finalists <span class="counter" id="rcFn">0 / 2</span></h3><div id="resFn" class="pills"></div>
+          <h3>Champion</h3><select id="resChampion"><option value="">— none yet —</option></select>
+          <button class="primary" id="saveResults">Save results</button>
+        </div>
+        <div class="card">
+          <h2>Entries &amp; data</h2>
+          <div class="row-actions">
+            <button class="ghost" id="loadEntries">Load entries</button>
+            <button class="ghost" id="exportCsv">Export CSV</button>
+            <button class="danger" id="resetBtn">Reset entries &amp; results</button>
+            <button class="danger" id="deleteBtn">Delete this pool</button>
+          </div>
+          <div id="entriesWrap" style="margin-top:14px"></div>
+        </div>
       </div>
-    </div>
+    </section>
   </section>
 </div>
 
-<!-- Vercel Web Analytics -->
 <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);};</script>
 <script defer src="/_vercel/insights/script.js"></script>
 
 <script>
-// ---------- Sample fallback so the page renders even with no backend ----------
-const FALLBACK = {
-  initialized: false,
-  brand: { name: "World Cup 2026 Predictor", tagline: "Predict the bracket. Top the office leaderboard.", logoUrl: "", color: "#003da5" },
-  groups: [
-    { id:"A", name:"Group A", teams:["Mexico","Croatia","Ecuador","Saudi Arabia"] },
-    { id:"B", name:"Group B", teams:["Canada","Belgium","Morocco","Uzbekistan"] },
-    { id:"C", name:"Group C", teams:["USA","Senegal","Australia","Panama"] },
-    { id:"D", name:"Group D", teams:["Argentina","Japan","Nigeria","Norway"] },
-    { id:"E", name:"Group E", teams:["France","Mexico B","Egypt","New Zealand"] },
-    { id:"F", name:"Group F", teams:["Brazil","Switzerland","South Korea","Jordan"] },
-    { id:"G", name:"Group G", teams:["England","Uruguay","Ivory Coast","Qatar"] },
-    { id:"H", name:"Group H", teams:["Spain","Colombia","Ghana","Costa Rica"] },
-    { id:"I", name:"Group I", teams:["Portugal","Netherlands","Cameroon","Iran"] },
-    { id:"J", name:"Group J", teams:["Germany","Denmark","Tunisia","Curaçao"] },
-    { id:"K", name:"Group K", teams:["Italy","Mexico C","Algeria","Haiti"] },
-    { id:"L", name:"Group L", teams:["Netherlands B","Austria","Mali","Jordan B"] },
-  ],
-  points: { group:3, qf:5, sf:10, fn:20, champion:30, wrong:1 },
-  results: { groups:{}, qf:[], sf:[], fn:[], champion:"" },
-  predictions: [], visits: 0, total: 0,
-};
+const REQ = { qf:8, sf:4, fn:2 };
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
-const REQ = { qf: 8, sf: 4, fn: 2 };
-let STATE = FALLBACK;
-let ADMIN = ""; // unlocked admin code, kept in memory only
+// URL state
+const params = new URLSearchParams(location.search);
+let POOL = params.get("pool") || "";
+let TOKEN = params.get("admin") || ""; // admin token from secret link
+
+let STATE = null, OFFLINE = false;
 const pick = { groups:{}, qf:new Set(), sf:new Set(), fn:new Set(), champion:"" };
 const adminRes = { groups:{}, qf:new Set(), sf:new Set(), fn:new Set(), champion:"" };
 
-const $ = (id) => document.getElementById(id);
 const api = async (path, opts) => {
   const r = await fetch(path + (path.includes("?") ? "&" : "?") + "t=" + Date.now(), opts);
   const j = await r.json().catch(() => ({}));
-  return { ok: r.ok, status: r.status, body: j };
+  return { ok:r.ok, status:r.status, body:j };
 };
+const post = (path, obj) => api(path, { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(obj) });
 function flash(msg, kind) {
-  const f = $("flash"); f.textContent = msg; f.className = "banner " + (kind || "ok");
-  f.classList.remove("hidden");
+  const f = $("flash"); f.textContent = msg; f.className = "banner " + (kind||"ok"); f.classList.remove("hidden");
   clearTimeout(flash._t); flash._t = setTimeout(() => f.classList.add("hidden"), 4000);
 }
+function show(view) { ["homeView","poolView","killView"].forEach(v => $(v).classList.toggle("hidden", v !== view)); }
 function allTeams() { return STATE.groups.flatMap(g => g.teams); }
+function poolUrl(extra) { return location.origin + location.pathname + "?pool=" + POOL + (extra||""); }
 
-// ---------- Branding ----------
 function applyBrand(b) {
   document.documentElement.style.setProperty("--brand", b.color || "#003da5");
   document.documentElement.style.setProperty("--brand-soft", (b.color || "#003da5") + "22");
@@ -336,16 +297,11 @@ function applyBrand(b) {
   $("brandTagline").textContent = b.tagline || "";
   document.title = b.name || "Tournament Predictor";
   const box = $("logoBox");
-  if (b.logoUrl) {
-    const img = new Image(); img.id = "logoBox"; img.className = "hero-logo"; img.src = b.logoUrl;
-    box.replaceWith(img);
-  } else {
-    const div = document.createElement("div"); div.id = "logoBox"; div.className = "hero-logo fallback"; div.textContent = "🏆";
-    box.replaceWith(div);
-  }
+  if (b.logoUrl) { const img = new Image(); img.id="logoBox"; img.className="hero-logo"; img.src=b.logoUrl; box.replaceWith(img); }
+  else { const div = document.createElement("div"); div.id="logoBox"; div.className="hero-logo fallback"; div.textContent="🏆"; box.replaceWith(div); }
 }
 
-// ---------- Generic pill multi-select ----------
+// ---- pills ----
 function buildPills(container, teams, set, max, counterEl, onChange) {
   container.innerHTML = "";
   teams.forEach(team => {
@@ -355,33 +311,25 @@ function buildPills(container, teams, set, max, counterEl, onChange) {
     el.onclick = () => {
       if (set.has(team)) set.delete(team);
       else { if (set.size >= max) return; set.add(team); }
-      refreshPills(container, set, max, counterEl);
-      onChange && onChange();
+      refreshPills(container, set, max, counterEl); onChange && onChange();
     };
     container.appendChild(el);
   });
   refreshPills(container, set, max, counterEl);
 }
 function refreshPills(container, set, max, counterEl) {
-  [...container.children].forEach(el => {
-    const sel = set.has(el.textContent);
-    el.className = "pill" + (sel ? " sel" : (set.size >= max ? " dim" : ""));
-  });
-  if (counterEl) {
-    counterEl.textContent = `${set.size} / ${max}`;
-    counterEl.className = "counter" + (set.size === max ? " done" : "");
-  }
+  [...container.children].forEach(el => { const s = set.has(el.textContent); el.className = "pill" + (s ? " sel" : (set.size >= max ? " dim" : "")); });
+  if (counterEl) { counterEl.textContent = `${set.size} / ${max}`; counterEl.className = "counter" + (set.size === max ? " done" : ""); }
 }
 
-// ---------- Render Predict tab ----------
+// ---- predict ----
 function renderPredict() {
   const gw = $("groupWinners"); gw.innerHTML = "";
   STATE.groups.forEach(g => {
     const box = document.createElement("div"); box.className = "group-box";
     const opts = ['<option value="">— winner —</option>'].concat(g.teams.map(t => `<option>${esc(t)}</option>`)).join("");
     box.innerHTML = `<strong>${esc(g.name)}</strong><select data-gid="${esc(g.id)}">${opts}</select>`;
-    const sel = box.querySelector("select");
-    sel.value = pick.groups[g.id] || "";
+    const sel = box.querySelector("select"); sel.value = pick.groups[g.id] || "";
     sel.onchange = () => { pick.groups[g.id] = sel.value; updateSubmit(); };
     gw.appendChild(box);
   });
@@ -396,56 +344,46 @@ function renderPredict() {
   updateSubmit();
 }
 function predictionComplete() {
-  return $("pName").value.trim().length >= 2 &&
-    STATE.groups.every(g => pick.groups[g.id]) &&
+  return $("pName").value.trim().length >= 2 && STATE.groups.every(g => pick.groups[g.id]) &&
     pick.qf.size === REQ.qf && pick.sf.size === REQ.sf && pick.fn.size === REQ.fn && pick.champion;
 }
 function updateSubmit() { $("submitBtn").disabled = !predictionComplete() || OFFLINE; }
-
 async function submitPrediction() {
   $("submitBtn").disabled = true;
-  const payload = {
-    name: $("pName").value.trim(),
-    groups: pick.groups,
-    qf: [...pick.qf], sf: [...pick.sf], fn: [...pick.fn], champion: pick.champion,
-  };
-  const r = await api("/api/predict", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(payload) });
+  const r = await post("/api/predict", { pool:POOL, name:$("pName").value.trim(), groups:pick.groups, qf:[...pick.qf], sf:[...pick.sf], fn:[...pick.fn], champion:pick.champion });
   if (r.ok) { flash("Prediction submitted. Good luck! 🏆", "ok"); await loadState(); switchTab("board"); }
   else { flash(r.body.error || "Submit failed", "err"); updateSubmit(); }
 }
 
-// ---------- Stats + Leaderboard ----------
+// ---- stats / board ----
 function renderStats() {
-  $("statTotal").textContent = STATE.total;
-  $("statVisits").textContent = STATE.visits;
-  const counts = {};
-  STATE.predictions.forEach(p => { if (p.champion) counts[p.champion] = (counts[p.champion]||0)+1; });
+  $("statTotal").textContent = STATE.total; $("statVisits").textContent = STATE.visits;
+  const counts = STATE.champCounts || {};
   const rows = Object.entries(counts).sort((a,b) => b[1]-a[1]);
   const max = rows.length ? rows[0][1] : 1;
   $("champDist").innerHTML = rows.length ? rows.map(([t,c]) =>
-    `<div class="bar-row"><span class="bar-name">${esc(t)}</span><span class="bar-track"><span class="bar-fill" style="width:${(c/max*100).toFixed(0)}%"></span></span><span class="bar-val">${c}</span></div>`
-  ).join("") : '<p class="hint">No champion picks yet.</p>';
+    `<div class="bar-row"><span class="bar-name">${esc(t)}</span><span class="bar-track"><span class="bar-fill" style="width:${(c/max*100).toFixed(0)}%"></span></span><span class="bar-val">${c}</span></div>`).join("")
+    : '<p class="hint">No champion picks yet.</p>';
 }
 function renderBoard() {
   const b = $("boardBody"); b.innerHTML = "";
   $("boardEmpty").classList.toggle("hidden", STATE.predictions.length > 0);
   STATE.predictions.forEach((p, i) => {
-    const tr = document.createElement("tr");
-    if (i === 0) tr.className = "top1";
+    const tr = document.createElement("tr"); if (i === 0) tr.className = "top1";
     tr.innerHTML = `<td class="rank">${i+1}</td><td>${esc(p.name)}</td><td>${esc(p.champion||"—")}</td><td class="score">${p.score}</td>`;
     b.appendChild(tr);
   });
 }
 
-// ---------- Admin ----------
+// ---- admin ----
 function renderAdminForms() {
+  $("aPlayLink").textContent = poolUrl();
+  $("aAdminLink").textContent = poolUrl("&admin=" + TOKEN);
   const b = STATE.brand;
-  $("bName").value = b.name || ""; $("bColor").value = b.color || "#003da5";
-  $("bTagline").value = b.tagline || ""; $("bLogoUrl").value = b.logoUrl && !b.logoUrl.startsWith("data:") ? b.logoUrl : "";
+  $("bName").value = b.name||""; $("bColor").value = b.color||"#003da5"; $("bTagline").value = b.tagline||"";
+  $("bLogoUrl").value = b.logoUrl && !b.logoUrl.startsWith("data:") ? b.logoUrl : "";
   const p = STATE.points;
   $("pGroup").value=p.group; $("pQf").value=p.qf; $("pSf").value=p.sf; $("pFn").value=p.fn; $("pChampion").value=p.champion; $("pWrong").value=p.wrong;
-
-  // group editor
   const ge = $("groupEditor"); ge.innerHTML = "";
   STATE.groups.forEach((g, gi) => {
     const box = document.createElement("div"); box.className = "group-box";
@@ -453,8 +391,6 @@ function renderAdminForms() {
       g.teams.map((t, ti) => `<input type="text" data-g="${gi}" data-t="${ti}" value="${esc(t)}" style="margin-top:6px" />`).join("");
     ge.appendChild(box);
   });
-
-  // results editor
   const rg = $("resGroups"); rg.innerHTML = "";
   STATE.groups.forEach(g => {
     const box = document.createElement("div"); box.className = "group-box";
@@ -470,8 +406,7 @@ function renderAdminForms() {
   buildPills($("resFn"), teams, adminRes.fn, REQ.fn, $("rcFn"));
   const rc = $("resChampion");
   rc.innerHTML = '<option value="">— none yet —</option>' + teams.map(t => `<option>${esc(t)}</option>`).join("");
-  rc.value = adminRes.champion;
-  rc.onchange = () => adminRes.champion = rc.value;
+  rc.value = adminRes.champion; rc.onchange = () => adminRes.champion = rc.value;
 }
 function loadResultsIntoAdmin() {
   const r = STATE.results || {};
@@ -479,19 +414,23 @@ function loadResultsIntoAdmin() {
   adminRes.qf = new Set(r.qf||[]); adminRes.sf = new Set(r.sf||[]); adminRes.fn = new Set(r.fn||[]);
   adminRes.champion = r.champion || "";
 }
-async function adminPost(action, extra) {
-  const r = await api("/api/admin", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ code: ADMIN, action, ...extra }) });
-  return r;
-}
+const adminPost = (action, extra) => post("/api/admin", { pool:POOL, token:TOKEN, action, ...extra });
 function collectGroupsFromEditor() {
   return STATE.groups.map((g, gi) => {
     const nameEl = document.querySelector(`[data-g="${gi}"][data-f="name"]`);
     const teams = [0,1,2,3].map(ti => document.querySelector(`[data-g="${gi}"][data-t="${ti}"]`).value.trim());
-    return { id: g.id, name: nameEl.value.trim() || g.name, teams };
+    return { id:g.id, name:nameEl.value.trim() || g.name, teams };
   });
 }
+async function unlockAdmin() {
+  const r = await adminPost("verify", {});
+  if (r.ok) {
+    $("adminLogin").classList.add("hidden"); $("adminPanel").classList.remove("hidden");
+    loadResultsIntoAdmin(); renderAdminForms();
+  } else { flash(r.body.error || "Invalid token", "err"); }
+}
 
-// ---------- Tabs ----------
+// ---- tabs ----
 function switchTab(name) {
   document.querySelectorAll("nav.tabs button").forEach(b => b.classList.toggle("active", b.dataset.tab === name));
   ["predict","stats","board","admin"].forEach(t => $("tab-"+t).classList.toggle("hidden", t !== name));
@@ -499,48 +438,68 @@ function switchTab(name) {
   if (name === "board") renderBoard();
 }
 
-// ---------- Load + boot ----------
-let OFFLINE = false;
-function esc(s) { return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+// ---- load ----
 async function loadState() {
-  const r = await api("/api/state");
+  const r = await api("/api/state?pool=" + encodeURIComponent(POOL));
+  if (r.status === 404) { flash("Pool not found. Check your link.", "err"); show("home"); return false; }
   if (r.ok && r.body && r.body.groups) {
     STATE = r.body; OFFLINE = false; $("offlineBanner").classList.add("hidden");
+    if (STATE.killed) { $("killMsg").textContent = "The tournament is over and this predictor has closed."; show("kill"); return false; }
     $("setupBanner").classList.toggle("hidden", STATE.initialized);
-  } else {
-    STATE = FALLBACK; OFFLINE = true; $("offlineBanner").classList.remove("hidden");
-  }
+  } else { OFFLINE = true; $("offlineBanner").classList.remove("hidden"); if (!STATE) return false; }
   applyBrand(STATE.brand);
   $("chipVisits").textContent = `👁 ${STATE.visits} visits`;
   $("chipPreds").textContent = `📝 ${STATE.total} entries`;
   renderPredict();
-  if ($("tab-stats") && !$("tab-stats").classList.contains("hidden")) renderStats();
-  if ($("tab-board") && !$("tab-board").classList.contains("hidden")) renderBoard();
+  if (!$("tab-stats").classList.contains("hidden")) renderStats();
+  if (!$("tab-board").classList.contains("hidden")) renderBoard();
+  return true;
 }
 async function countVisit() {
-  if (sessionStorage.getItem("wc_visited")) return;
-  sessionStorage.setItem("wc_visited", "1");
-  await api("/api/visit", { method:"POST" }).catch(() => {});
+  const key = "wc_visited_" + POOL;
+  if (sessionStorage.getItem(key)) return;
+  sessionStorage.setItem(key, "1");
+  await post("/api/visit", { pool:POOL }).catch(() => {});
 }
 
-function wire() {
+// ---- home (create / manage) ----
+function wireHome() {
+  $("createBtn").onclick = async () => {
+    const code = $("ownerCode").value, name = $("newPoolName").value.trim();
+    if (!code) return flash("Enter your owner code.", "err");
+    $("createBtn").disabled = true;
+    const r = await post("/api/create", { code, name });
+    $("createBtn").disabled = false;
+    if (!r.ok) return flash(r.body.error || "Create failed", "err");
+    const base = location.origin + location.pathname;
+    const play = base + "?pool=" + r.body.poolId;
+    const admin = play + "&admin=" + r.body.token;
+    $("playLink").textContent = play; $("adminLink").textContent = admin;
+    $("goAdmin").href = admin; $("createdCard").classList.remove("hidden");
+    $("copyPlay").onclick = () => navigator.clipboard.writeText(play).then(() => flash("Play link copied.", "ok"));
+    $("copyAdmin").onclick = () => navigator.clipboard.writeText(admin).then(() => flash("Admin link copied.", "ok"));
+    flash("Pool created. Save your links!", "ok");
+  };
+  $("listBtn").onclick = async () => {
+    const code = $("listCode").value; if (!code) return flash("Enter owner code.", "err");
+    const r = await post("/api/admin", { action:"list", code });
+    if (!r.ok) return flash(r.body.error || "Failed", "err");
+    const base = location.origin + location.pathname;
+    $("poolList").innerHTML = r.body.pools.length ? r.body.pools.map(p =>
+      `<div class="group-box" style="margin-bottom:8px"><strong>${esc(p.name)}</strong> — ${p.players} players<br><a href="${base}?pool=${p.poolId}">open play link</a></div>`).join("")
+      : '<p class="hint">No pools yet.</p>';
+  };
+}
+
+// ---- pool wiring ----
+function wirePool() {
   document.querySelectorAll("nav.tabs button").forEach(b => b.onclick = () => switchTab(b.dataset.tab));
   $("pName").oninput = updateSubmit;
   $("submitBtn").onclick = submitPrediction;
-
-  $("adminUnlock").onclick = async () => {
-    const code = $("adminCode").value;
-    const r = await adminPostRaw(code, "verify");
-    if (r.ok) {
-      ADMIN = code; $("adminLogin").classList.add("hidden"); $("adminPanel").classList.remove("hidden");
-      loadResultsIntoAdmin(); renderAdminForms();
-      flash("Admin unlocked.", "ok");
-    } else flash(r.body.error || "Invalid code", "err");
-  };
-
+  $("adminUnlock").onclick = () => { TOKEN = $("adminToken").value.trim(); unlockAdmin(); };
   $("bLogoFile").onchange = (e) => {
     const f = e.target.files[0]; if (!f) return;
-    if (f.size > 300*1024) { flash("Logo too big (max 300KB). Use a URL instead.", "err"); return; }
+    if (f.size > 300*1024) return flash("Logo too big (max 300KB). Use a URL instead.", "err");
     const fr = new FileReader();
     fr.onload = () => { $("bLogoUrl").value = fr.result; $("logoPrev").src = fr.result; $("logoPrev").classList.remove("hidden"); };
     fr.readAsDataURL(f);
@@ -560,36 +519,48 @@ function wire() {
     if (r.ok) { flash("Scoring saved.", "ok"); await loadState(); } else flash(r.body.error||"Failed","err");
   };
   $("saveResults").onclick = async () => {
-    const results = { groups: adminRes.groups, qf:[...adminRes.qf], sf:[...adminRes.sf], fn:[...adminRes.fn], champion: adminRes.champion };
+    const results = { groups:adminRes.groups, qf:[...adminRes.qf], sf:[...adminRes.sf], fn:[...adminRes.fn], champion:adminRes.champion };
     const r = await adminPost("setResults", { results });
     if (r.ok) { flash("Results saved. Leaderboard recalculated.", "ok"); await loadState(); } else flash(r.body.error||"Failed","err");
   };
   $("loadEntries").onclick = async () => {
     const r = await adminPost("entries", {});
     if (!r.ok) return flash(r.body.error||"Failed","err");
-    const rows = r.body.entries.map((e,i) =>
-      `<tr><td class="rank">${i+1}</td><td>${esc(e.name)}</td><td>${esc(e.champion||"—")}</td><td class="score">${e.score}</td></tr>`).join("");
-    $("entriesWrap").innerHTML = `<table><thead><tr><th class="rank">#</th><th>Name</th><th>Champion</th><th style="text-align:right">Score</th></tr></thead><tbody>${rows||""}</tbody></table>` + (rows?"":'<p class="hint">No entries.</p>');
+    const rows = r.body.entries.map((e,i) => `<tr><td class="rank">${i+1}</td><td>${esc(e.name)}</td><td>${esc(e.champion||"—")}</td><td class="score">${e.score}</td></tr>`).join("");
+    $("entriesWrap").innerHTML = `<table><thead><tr><th class="rank">#</th><th>Name</th><th>Champion</th><th style="text-align:right">Score</th></tr></thead><tbody>${rows}</tbody></table>` + (rows?"":'<p class="hint">No entries.</p>');
   };
   $("exportCsv").onclick = async () => {
     const r = await adminPost("export", {});
     if (!r.ok) return flash(r.body.error||"Failed","err");
     const blob = new Blob([r.body.csv], { type:"text/csv" });
-    const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
-    a.download = "predictions.csv"; a.click(); URL.revokeObjectURL(a.href);
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "predictions.csv"; a.click(); URL.revokeObjectURL(a.href);
   };
   $("resetBtn").onclick = async () => {
-    if (!confirm("Delete ALL entries and results? Branding and groups are kept. This cannot be undone.")) return;
+    if (!confirm("Delete ALL entries and results for this pool? Branding and groups are kept.")) return;
     const r = await adminPost("reset", {});
     if (r.ok) { flash("Entries and results cleared.", "ok"); await loadState(); loadResultsIntoAdmin(); renderAdminForms(); } else flash(r.body.error||"Failed","err");
   };
-}
-async function adminPostRaw(code, action) {
-  return api("/api/admin", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ code, action }) });
+  $("deleteBtn").onclick = async () => {
+    if (!confirm("Permanently DELETE this entire pool? This frees a pool slot and cannot be undone.")) return;
+    const r = await adminPost("delete", {});
+    if (r.ok) { flash("Pool deleted.", "ok"); location.href = location.origin + location.pathname; } else flash(r.body.error||"Failed","err");
+  };
 }
 
-wire();
-loadState().then(countVisit);
+// ---- boot ----
+wireHome();
+wirePool();
+if (!POOL) {
+  show("home");
+} else {
+  show("pool");
+  loadState().then(ok => {
+    if (ok) {
+      countVisit();
+      if (TOKEN) { switchTab("admin"); unlockAdmin(); } // arrived via admin link
+    }
+  });
+}
 </script>
 </body>
 </html>

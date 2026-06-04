@@ -1,8 +1,10 @@
 # 🏆 Tournament Predictor
 
-A self-hosted office prediction game for the FIFA World Cup 2026 (or any 12-group knockout tournament). Staff predict group winners, who reaches each knockout round, and the champion. Live stats, a leaderboard, and a one-screen admin panel for entering official results.
+A self-hosted prediction game for the FIFA World Cup 2026 (or any 12-group knockout tournament). Players predict group winners, who reaches each knockout round, and the champion. Live stats, a leaderboard, and a one-screen admin panel for entering official results.
 
-**No player logins. One entry per person. You own your data.** Deploy it once, brand it as your own, run your office sweepstake.
+**One deploy hosts up to 10 separate pools** — run a pool per office, team, or friend group. Each pool holds up to **6000 players**, has its own branding, and its own private admin link.
+
+**No player logins. One entry per name. You own your data.** Deploy once, create pools in the browser, share a link.
 
 ![tabs: Predict / Live Stats / Leaderboard / Admin](#) <!-- drop a screenshot here -->
 
@@ -30,9 +32,11 @@ Most office prediction games are spreadsheets that fall apart by the round of 16
    openssl rand -hex 24
    ```
 3. Add the **Upstash** storage integration when prompted (or from the project's **Storage** tab afterward). It auto-injects the Redis env vars. **Redeploy once** after adding storage so the vars take effect.
-4. Open your site → **Admin** tab → enter your `ADMIN_CODE` → set your branding, real teams, and scoring.
+4. Open your site → enter your `ADMIN_CODE` → **Create pool**. You get two links:
+   - a **play link** (`?pool=…`) to share with players, and
+   - a private **admin link** (`?pool=…&admin=…`) to manage that pool. Save it like a password.
 
-That's it.
+That's it. Repeat step 4 for up to 10 pools.
 
 ---
 
@@ -49,16 +53,19 @@ npx vercel deploy --prod --yes
 
 ---
 
-## How to run your contest
+## How to run a pool
 
 | Step | Where | What |
 |------|-------|------|
-| 1. Brand it | Admin → Branding | Company name, tagline, brand color, logo (URL or upload). |
-| 2. Load the draw | Admin → Teams & groups | Edit the 12 groups / 4 teams to match the real draw. |
-| 3. (Optional) tune scoring | Admin → Scoring | Points per stage + wrong-pick penalty. |
-| 4. Share the link | — | Staff open it, enter a name, make picks, submit. One entry per name. |
-| 5. Enter results | Admin → Official results | Fill in each stage as it completes. The leaderboard recalculates instantly. |
-| 6. Export | Admin → Entries & data | Download all entries as CSV any time. |
+| 1. Create the pool | Home page | Enter your `ADMIN_CODE`, name the pool → get play + admin links. |
+| 2. Brand it | Admin → Branding | Pool name, tagline, brand color, logo (URL or upload). |
+| 3. Load the draw | Admin → Teams & groups | Edit the 12 groups / 4 teams to match the real draw. |
+| 4. (Optional) tune scoring | Admin → Scoring | Points per stage + wrong-pick penalty. |
+| 5. Share the play link | — | Players open it, enter a name, make picks, submit. One entry per name. |
+| 6. Enter results | Admin → Official results | Fill in each stage as it completes. The leaderboard recalculates instantly. Leave blank to keep all scores at 0. |
+| 7. Export | Admin → Entries & data | Download all entries as CSV any time. |
+
+> **Admin access = the secret link.** Anyone with a pool's admin link can manage it, so keep it private. Lost it? List your pools from the home page using your `ADMIN_CODE`. Your `ADMIN_CODE` also works as a master admin token for any pool.
 
 ### Default scoring
 
@@ -71,7 +78,20 @@ npx vercel deploy --prod --yes
 | Champion | +30 |
 | Any wrong pick (once that stage's results are in) | −1 |
 
-All editable in the Admin tab.
+All editable per pool in the Admin tab.
+
+---
+
+## Limits, cost & auto-shutdown
+
+Built so a single free deployment **cannot run up a bill**:
+
+- **10 pools max**, **6000 players per pool** — enforced server-side. Bounds storage and traffic.
+- **Cached leaderboard** — viewers read a precomputed, compact board (a couple of Redis ops per page), never the raw 6000 entries. This is what keeps 6000-player pools inside the free tiers.
+- **Fits the free tiers:** ~60K entries ≈ 30–60MB (Upstash free = 256MB). Both Upstash's free plan and Vercel's Hobby tier **hard-stop at their limits instead of billing you** — worst case the site pauses, it never charges.
+- **Hard shutdown on 2026-08-01:** after the tournament, every deployment self-closes (APIs return `410`, the page shows a finished screen) and Redis keys carry an `EXPIREAT` ~2 weeks later so data auto-deletes. Change the date in `KILL_TS` (`lib/store.js`) for other tournaments.
+
+> Want stronger guarantees? In Vercel set **Spend Management → $0**, and in Upstash set a **budget cap**. Then your maximum possible cost is provably $0.
 
 ---
 
@@ -81,17 +101,18 @@ All editable in the Admin tab.
 worldcup-predictor/
 ├─ vercel.json          # no-store cache headers (beats stale corporate proxies)
 ├─ package.json         # type:module, dep @upstash/redis
-├─ lib/store.js         # Redis client, keys, scoring, validation, defaults
-├─ api/state.js         # GET public state (config + results + leaderboard, PII stripped)
-├─ api/predict.js       # POST one prediction (validate + dedupe by name)
-├─ api/admin.js         # POST admin actions (code-gated)
-├─ api/visit.js         # POST visit counter
-└─ public/index.html    # entire UI (vanilla HTML/CSS/JS, no build step)
+├─ lib/store.js         # Redis client, per-pool keys, caps, kill switch, scoring, validation
+├─ api/create.js        # POST create a pool (ADMIN_CODE-gated, 10-pool cap) → returns play + admin tokens
+├─ api/state.js         # GET ?pool= public state (config + results + cached board)
+├─ api/predict.js       # POST one prediction (validate, dedupe, 6000-player cap, board update)
+├─ api/admin.js         # POST per-pool admin actions (token-gated) + list (ADMIN_CODE-gated)
+├─ api/visit.js         # POST per-pool visit counter
+└─ public/index.html    # entire UI: home (create/manage), predictor, kill screen
 ```
 
-- **Storage:** Upstash Redis. Keys: `wc:config`, `wc:results`, `wc:preds`, `wc:names`, `wc:visits`.
-- **Admin gate:** one shared secret in the `ADMIN_CODE` env var, checked server-side on every admin call. Never sent to the browser, never in source. Use a high-entropy value — there is no rate limiting, so the secret's randomness is the security boundary.
-- **Scoring:** computed server-side in `scoreOf`; a stage's penalties only apply once that stage's results are entered.
+- **Storage:** Upstash Redis, namespaced per pool: `wc:{poolId}:config | results | preds | names | board | visits | token`, plus a global `wc:pools` set.
+- **Two-tier auth:** the deployer's `ADMIN_CODE` (env var) gates pool *creation* and the master view; each pool also gets a random 32-hex **admin token** (the secret link) for day-to-day management. Both checked server-side, never in source. No rate limiting — token/code entropy is the security boundary.
+- **Scoring:** computed server-side in `scoreOf`; penalties for a stage apply only once that stage's results are entered. The cached board is rebuilt on every submit and whenever results/scoring change.
 
 ---
 
