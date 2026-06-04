@@ -23,9 +23,7 @@ Most office prediction games are spreadsheets that fall apart by the round of 16
 
 1. Click **Deploy**. Vercel clones the repo into your account.
 
-   [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/YOUR_GITHUB/worldcup-predictor&env=ADMIN_CODE&envDescription=A%20long%20random%20admin%20password%20(server-side%20only)&stores=%5B%7B%22type%22%3A%22integration%22%2C%22integrationSlug%22%3A%22upstash%22%2C%22productSlug%22%3A%22upstash-kv%22%7D%5D)
-
-   > Replace `YOUR_GITHUB/worldcup-predictor` in the button URL with your fork before publishing.
+   [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/WhiteChair/Worldcup2026_Diet_Predictions&env=ADMIN_CODE&envDescription=A%20long%20random%20admin%20password%20(server-side%20only)&stores=%5B%7B%22type%22%3A%22integration%22%2C%22integrationSlug%22%3A%22upstash%22%2C%22productSlug%22%3A%22upstash-kv%22%7D%5D)
 
 2. When prompted, set **`ADMIN_CODE`** to a long random string (your admin password). Generate one:
    ```bash
@@ -41,7 +39,7 @@ That's it.
 ## Manual deploy (CLI)
 
 ```bash
-git clone https://github.com/YOUR_GITHUB/worldcup-predictor && cd worldcup-predictor
+git clone https://github.com/WhiteChair/Worldcup2026_Diet_Predictions && cd Worldcup2026_Diet_Predictions
 npm install
 npx vercel link                         # link/create the Vercel project
 # add the Upstash integration in the Vercel dashboard → Storage tab
