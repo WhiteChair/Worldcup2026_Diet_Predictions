@@ -3,13 +3,15 @@ import {
   POOLS_KEY,
   K,
   MAX_POOLS,
-  checkCode,
+  CREATE_PER_IP_PER_DAY,
   newPoolId,
   newToken,
   defaultConfig,
   setConfig,
   touchExpiry,
   isKilled,
+  clientIp,
+  rateLimited,
   cors,
 } from "../lib/store.js";
 
@@ -26,16 +28,18 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Bad JSON" });
   }
 
-  if (!checkCode(body.code)) return res.status(401).json({ error: "Invalid admin code" });
-
   const redis = getRedis();
   try {
-    const count = await redis.scard(POOLS_KEY);
-    if (count >= MAX_POOLS) {
-      return res.status(409).json({ error: `Pool limit reached (${MAX_POOLS}). Delete one to create another.` });
+    // Open creation, throttled per IP so one person can't spam-fill the pool slots.
+    if (await rateLimited(clientIp(req), "create", CREATE_PER_IP_PER_DAY)) {
+      return res.status(429).json({ error: `You can create up to ${CREATE_PER_IP_PER_DAY} pools per day.` });
     }
 
-    // generate a unique pool id
+    const count = await redis.scard(POOLS_KEY);
+    if (count >= MAX_POOLS) {
+      return res.status(409).json({ error: "All pools are currently in use. Try again later." });
+    }
+
     let poolId = newPoolId();
     for (let i = 0; i < 5 && (await redis.sismember(POOLS_KEY, poolId)) === 1; i++) poolId = newPoolId();
 

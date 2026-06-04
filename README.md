@@ -2,9 +2,9 @@
 
 A self-hosted prediction game for the FIFA World Cup 2026 (or any 12-group knockout tournament). Players predict group winners, who reaches each knockout round, and the champion. Live stats, a leaderboard, and a one-screen admin panel for entering official results.
 
-**One deploy hosts up to 10 separate pools** — run a pool per office, team, or friend group. Each pool holds up to **6000 players**, has its own branding, and its own private admin link.
+**One deploy, many self-serve pools.** Share one link; anyone can spin up their own pool — for an office, team, or friend group. Each pool holds up to **250 players**, has its own branding, and its own private admin link.
 
-**No player logins. One entry per name. You own your data.** Deploy once, create pools in the browser, share a link.
+**No player logins. One entry per name. You own your data.** Deploy once, share the link, let people create their own pools.
 
 ![tabs: Predict / Live Stats / Leaderboard / Admin](#) <!-- drop a screenshot here -->
 
@@ -32,11 +32,13 @@ Most office prediction games are spreadsheets that fall apart by the round of 16
    openssl rand -hex 24
    ```
 3. Add the **Upstash** storage integration when prompted (or from the project's **Storage** tab afterward). It auto-injects the Redis env vars. **Redeploy once** after adding storage so the vars take effect.
-4. Open your site → enter your `ADMIN_CODE` → **Create pool**. You get two links:
+4. Open your site → **Create my pool** (no code needed — creation is open). You get two links:
    - a **play link** (`?pool=…`) to share with players, and
    - a private **admin link** (`?pool=…&admin=…`) to manage that pool. Save it like a password.
 
-That's it. Repeat step 4 for up to 10 pools.
+Share the site URL anywhere (LinkedIn, Slack, email) and people create their own pools.
+
+Your `ADMIN_CODE` is still used for the **master view** — listing every pool from the home page — and as a master admin token for any pool.
 
 ---
 
@@ -57,7 +59,7 @@ npx vercel deploy --prod --yes
 
 | Step | Where | What |
 |------|-------|------|
-| 1. Create the pool | Home page | Enter your `ADMIN_CODE`, name the pool → get play + admin links. |
+| 1. Create the pool | Home page | Name the pool → get play + admin links. No code needed. |
 | 2. Brand it | Admin → Branding | Pool name, tagline, brand color, logo (URL or upload). |
 | 3. Load the draw | Admin → Teams & groups | Edit the 12 groups / 4 teams to match the real draw. |
 | 4. (Optional) tune scoring | Admin → Scoring | Points per stage + wrong-pick penalty. |
@@ -86,10 +88,11 @@ All editable per pool in the Admin tab.
 
 Built so a single free deployment **cannot run up a bill**:
 
-- **10 pools max**, **6000 players per pool** — enforced server-side. Bounds storage and traffic.
-- **Cached leaderboard** — viewers read a precomputed, compact board (a couple of Redis ops per page), never the raw 6000 entries. This is what keeps 6000-player pools inside the free tiers.
-- **Fits the free tiers:** ~60K entries ≈ 30–60MB (Upstash free = 256MB). Both Upstash's free plan and Vercel's Hobby tier **hard-stop at their limits instead of billing you** — worst case the site pauses, it never charges.
-- **Hard shutdown on 2026-08-01:** after the tournament, every deployment self-closes (APIs return `410`, the page shows a finished screen) and Redis keys carry an `EXPIREAT` ~2 weeks later so data auto-deletes. Change the date in `KILL_TS` (`lib/store.js`) for other tournaments.
+- **100 pools max**, **250 players per pool** — enforced server-side (`MAX_POOLS`, `MAX_PLAYERS_PER_POOL`). Open creation is **rate-limited to 5 pools/IP/day** so one person can't spam-fill the slots.
+- **Tiny storage footprint:** 100 full pools × 250 ≈ 25K entries ≈ **~17MB** (Upstash free = 256MB). Storage is never the constraint at this scale.
+- **Cached leaderboard** — viewers read a precomputed, compact board (a couple of Redis ops per page), never raw entries. The real shared ceiling is monthly Redis commands (free = 500K ≈ ~160K page views/mo).
+- **No-bill guarantee:** both Upstash's free plan and Vercel's Hobby tier **hard-stop at their limits instead of charging** — worst case the site pauses, it never bills. Set Vercel **Spend Management → $0** + an Upstash **budget cap** to make max cost provably $0.
+- **Hard shutdown on 2026-08-01:** after the tournament, every deployment self-closes (APIs return `410`, the page shows a finished screen) and every pool's Redis keys carry an `EXPIREAT` ~2 weeks later, so **all data auto-deletes by mid-August**. Change `KILL_TS` (`lib/store.js`) for other tournaments.
 
 > Want stronger guarantees? In Vercel set **Spend Management → $0**, and in Upstash set a **budget cap**. Then your maximum possible cost is provably $0.
 
@@ -102,16 +105,16 @@ worldcup-predictor/
 ├─ vercel.json          # no-store cache headers (beats stale corporate proxies)
 ├─ package.json         # type:module, dep @upstash/redis
 ├─ lib/store.js         # Redis client, per-pool keys, caps, kill switch, scoring, validation
-├─ api/create.js        # POST create a pool (ADMIN_CODE-gated, 10-pool cap) → returns play + admin tokens
+├─ api/create.js        # POST create a pool (open, IP rate-limited, 100-pool cap) → returns play + admin tokens
 ├─ api/state.js         # GET ?pool= public state (config + results + cached board)
-├─ api/predict.js       # POST one prediction (validate, dedupe, 6000-player cap, board update)
+├─ api/predict.js       # POST one prediction (validate, dedupe, 250-player cap, board update)
 ├─ api/admin.js         # POST per-pool admin actions (token-gated) + list (ADMIN_CODE-gated)
 ├─ api/visit.js         # POST per-pool visit counter
 └─ public/index.html    # entire UI: home (create/manage), predictor, kill screen
 ```
 
 - **Storage:** Upstash Redis, namespaced per pool: `wc:{poolId}:config | results | preds | names | board | visits | token`, plus a global `wc:pools` set.
-- **Two-tier auth:** the deployer's `ADMIN_CODE` (env var) gates pool *creation* and the master view; each pool also gets a random 32-hex **admin token** (the secret link) for day-to-day management. Both checked server-side, never in source. No rate limiting — token/code entropy is the security boundary.
+- **Auth:** pool *creation* is open (IP rate-limited). Each pool gets a random 32-hex **admin token** (the secret link) for management. The deployer's `ADMIN_CODE` (env var) gates the master "list all pools" view and works as a master token for any pool. Tokens/code are checked server-side, never in source — their entropy is the security boundary.
 - **Scoring:** computed server-side in `scoreOf`; penalties for a stage apply only once that stage's results are entered. The cached board is rebuilt on every submit and whenever results/scoring change.
 
 ---

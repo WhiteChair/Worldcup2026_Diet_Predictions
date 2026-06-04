@@ -96,14 +96,12 @@
   <!-- ===================== HOME (no pool selected) ===================== -->
   <section id="homeView" class="hidden">
     <div class="card">
-      <h2>Run an office prediction pool</h2>
-      <p class="hint">This site can host up to <b>10 pools</b>, each with up to <b>6000 players</b>. Create one below, share the play link with your office, and keep the admin link private.</p>
+      <h2>Start your own prediction pool 🏆</h2>
+      <p class="hint">Free. Name your pool, get a link to share with friends or colleagues, and predict the 2026 World Cup together. Up to <b>250 players</b> per pool.</p>
       <label>Pool name</label>
       <input type="text" id="newPoolName" placeholder="e.g. Acme Corp World Cup Sweepstake" maxlength="80" />
-      <label>Owner code</label>
-      <input type="password" id="ownerCode" placeholder="the ADMIN_CODE set on deploy" />
-      <p class="hint">This is the secret you set as <code>ADMIN_CODE</code> when deploying. Only you should know it.</p>
-      <button class="primary" id="createBtn">Create pool</button>
+      <button class="primary" id="createBtn">Create my pool</button>
+      <p class="hint" style="margin-top:10px">You'll get a <b>play link</b> to share and a private <b>admin link</b> to manage results. Save both — the admin link is your only way back in.</p>
     </div>
 
     <div id="createdCard" class="card hidden">
@@ -465,10 +463,10 @@ async function countVisit() {
 // ---- home (create / manage) ----
 function wireHome() {
   $("createBtn").onclick = async () => {
-    const code = $("ownerCode").value, name = $("newPoolName").value.trim();
-    if (!code) return flash("Enter your owner code.", "err");
+    const name = $("newPoolName").value.trim();
+    if (name.length < 2) return flash("Give your pool a name.", "err");
     $("createBtn").disabled = true;
-    const r = await post("/api/create", { code, name });
+    const r = await post("/api/create", { name });
     $("createBtn").disabled = false;
     if (!r.ok) return flash(r.body.error || "Create failed", "err");
     const base = location.origin + location.pathname;
