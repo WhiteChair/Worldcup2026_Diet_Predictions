@@ -71,7 +71,17 @@
   .center { text-align:center; }
   .big-emoji { font-size:64px; }
   .site-footer { text-align:center; margin-top:28px; padding-top:16px; }
-  .site-footer a { display:inline-block; background:#FFDD00; color:#1a1a1a; font-weight:700; text-decoration:none; padding:9px 18px; border-radius:10px; font-size:14px; box-shadow:var(--shadow); }
+  .site-footer a.coffee { display:inline-block; background:#FFDD00; color:#1a1a1a; font-weight:700; text-decoration:none; padding:9px 18px; border-radius:10px; font-size:14px; box-shadow:var(--shadow); }
+  .site-footer .org-link { display:block; margin-top:12px; }
+  .site-footer .org-link a { color:var(--muted); font-size:12px; text-decoration:none; }
+  .site-footer .org-link a:hover { text-decoration:underline; }
+  .lead { font-size:15px; color:var(--ink); margin:6px 0 14px; }
+  .steps { display:flex; flex-direction:column; gap:14px; }
+  .step { display:flex; gap:12px; align-items:flex-start; }
+  .step-n { flex:none; width:28px; height:28px; border-radius:50%; background:var(--brand); color:#fff; font-weight:800; display:flex; align-items:center; justify-content:center; font-size:14px; }
+  ul.feat { list-style:none; padding:0; margin:0; }
+  ul.feat li { padding:8px 0; border-bottom:1px solid var(--line); font-size:14px; }
+  ul.feat li:last-child { border-bottom:none; }
   @media (max-width:560px) { .grid2 { grid-template-columns:1fr; } .stat-strip { width:100%; margin:8px 0 0; } }
 </style>
 </head>
@@ -97,13 +107,14 @@
 
   <!-- ===================== HOME (no pool selected) ===================== -->
   <section id="homeView" class="hidden">
-    <div class="card">
-      <h2>Start your own prediction pool 🏆</h2>
-      <p class="hint">Free. Name your pool, get a link to share with friends or colleagues, and predict the 2026 World Cup together. Up to <b>250 players</b> per pool.</p>
-      <label>Pool name</label>
+    <!-- HERO + CREATE -->
+    <div class="card hero-card">
+      <h2 style="font-size:24px">Run your office World Cup 2026 pool 🏆</h2>
+      <p class="lead">The easy way to run a prediction sweepstake for the 2026 World Cup. Name your pool, share one link, and everyone predicts the bracket. Live leaderboard, zero spreadsheets, <b>no sign-ups</b>.</p>
+      <label>Name your pool</label>
       <input type="text" id="newPoolName" placeholder="e.g. Acme Corp World Cup Sweepstake" maxlength="80" />
-      <button class="primary" id="createBtn">Create my pool</button>
-      <p class="hint" style="margin-top:10px">You'll get a <b>play link</b> to share and a private <b>admin link</b> to manage results. Save both — the admin link is your only way back in.</p>
+      <button class="primary" id="createBtn">Create my pool — free</button>
+      <p class="hint" style="margin-top:10px">⏱ Takes 30 seconds. You get a <b>play link</b> to share + a private <b>admin link</b> to manage it. No account, no card, nothing to install.</p>
     </div>
 
     <div id="createdCard" class="card hidden">
@@ -118,7 +129,33 @@
       <p class="hint" style="margin-top:14px"><a id="goAdmin" href="#">→ Open this pool's admin now</a></p>
     </div>
 
+    <!-- HOW IT WORKS -->
     <div class="card">
+      <h2>How it works</h2>
+      <div class="steps">
+        <div class="step"><span class="step-n">1</span><div><b>Create</b><br><span class="hint">Name your pool, get an instant shareable link.</span></div></div>
+        <div class="step"><span class="step-n">2</span><div><b>Share &amp; predict</b><br><span class="hint">Players open the link, enter their name, and pick group winners, knockout teams and the champion. One entry each.</span></div></div>
+        <div class="step"><span class="step-n">3</span><div><b>Compete</b><br><span class="hint">A live leaderboard ranks everyone as official results come in. See what the crowd is predicting too.</span></div></div>
+      </div>
+    </div>
+
+    <!-- WHY / CUSTOMISE -->
+    <div class="card">
+      <h2>Make it yours</h2>
+      <ul class="feat">
+        <li>🎨 <b>Brand it</b> — your pool name, colours and logo.</li>
+        <li>⚽ <b>Edit teams &amp; groups</b> — comes pre-loaded with the real 2026 draw, tweak if you like.</li>
+        <li>🏅 <b>Custom scoring</b> — set your own points per stage.</li>
+        <li>🙅 <b>No sign-ups</b> — players just type a name. No accounts, no emails.</li>
+        <li>📊 <b>Live stats &amp; leaderboard</b> — see favourites and rankings update automatically.</li>
+        <li>👥 <b>Up to 250 players</b> per pool — plenty for any office.</li>
+        <li>🔒 <b>Private &amp; simple</b> — one entry per name, results handled for you.</li>
+      </ul>
+      <button class="primary" id="createBtn2">Create your pool now</button>
+    </div>
+
+    <!-- ORGANISER PANEL (hidden; opened from footer link) -->
+    <div id="orgPanel" class="card hidden">
       <h2>Organiser tools</h2>
       <p class="hint">Enter your owner code to list pools and enter official results (results apply to <b>all</b> pools at once).</p>
       <input type="password" id="listCode" placeholder="owner code" />
@@ -280,7 +317,8 @@
   </section>
 
   <footer class="site-footer">
-    <a href="https://buymeacoffee.com/samcolt" target="_blank" rel="noopener">☕ Buy me a coffee</a>
+    <a class="coffee" href="https://buymeacoffee.com/samcolt" target="_blank" rel="noopener">☕ Buy me a coffee</a>
+    <span class="org-link"><a href="?org=1">Organiser tools</a></span>
   </footer>
 </div>
 
@@ -515,24 +553,27 @@ function renderOrgResults() {
 }
 
 // ---- home (create / manage) ----
+async function createPool() {
+  const name = $("newPoolName").value.trim();
+  if (name.length < 2) { window.scrollTo({ top:0, behavior:"smooth" }); $("newPoolName").focus(); return flash("Name your pool to start.", "warn"); }
+  $("createBtn").disabled = true;
+  const r = await post("/api/create", { name });
+  $("createBtn").disabled = false;
+  if (!r.ok) return flash(r.body.error || "Create failed", "err");
+  const base = location.origin + location.pathname;
+  const play = base + "?pool=" + r.body.poolId;
+  const admin = play + "&admin=" + r.body.token;
+  $("playLink").textContent = play; $("adminLink").textContent = admin;
+  $("goAdmin").href = admin; $("createdCard").classList.remove("hidden");
+  $("createdCard").scrollIntoView({ behavior:"smooth" });
+  $("copyPlay").onclick = () => navigator.clipboard.writeText(play).then(() => flash("Play link copied.", "ok"));
+  $("copyAdmin").onclick = () => navigator.clipboard.writeText(admin).then(() => flash("Admin link copied.", "ok"));
+  flash("Pool created. Save your links!", "ok");
+  api("/api/visit").then(s => { if (s.ok && s.body) $("chipPreds").textContent = `🏆 ${s.body.pools} pools created`; });
+}
 function wireHome() {
-  $("createBtn").onclick = async () => {
-    const name = $("newPoolName").value.trim();
-    if (name.length < 2) return flash("Give your pool a name.", "err");
-    $("createBtn").disabled = true;
-    const r = await post("/api/create", { name });
-    $("createBtn").disabled = false;
-    if (!r.ok) return flash(r.body.error || "Create failed", "err");
-    const base = location.origin + location.pathname;
-    const play = base + "?pool=" + r.body.poolId;
-    const admin = play + "&admin=" + r.body.token;
-    $("playLink").textContent = play; $("adminLink").textContent = admin;
-    $("goAdmin").href = admin; $("createdCard").classList.remove("hidden");
-    $("copyPlay").onclick = () => navigator.clipboard.writeText(play).then(() => flash("Play link copied.", "ok"));
-    $("copyAdmin").onclick = () => navigator.clipboard.writeText(admin).then(() => flash("Admin link copied.", "ok"));
-    flash("Pool created. Save your links!", "ok");
-    api("/api/visit").then(s => { if (s.ok && s.body) $("chipPreds").textContent = `🏆 ${s.body.pools} pools created`; });
-  };
+  $("createBtn").onclick = createPool;
+  $("createBtn2").onclick = createPool;
   $("listBtn").onclick = async () => {
     const code = $("listCode").value; if (!code) return flash("Enter owner code.", "err");
     const r = await post("/api/admin", { action:"list", code });
@@ -620,6 +661,7 @@ wirePool();
 if (!POOL) {
   show("home");
   loadHomeStats();
+  if (params.get("org")) { $("orgPanel").classList.remove("hidden"); $("orgPanel").scrollIntoView(); }
 } else {
   show("pool");
   loadState().then(ok => {
