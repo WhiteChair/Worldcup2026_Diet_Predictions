@@ -1,6 +1,8 @@
 import {
   getRedis,
   POOLS_KEY,
+  POOLS_MADE_KEY,
+  DATA_EXPIRE_TS,
   K,
   MAX_POOLS,
   CREATE_PER_IP_PER_DAY,
@@ -55,6 +57,8 @@ export default async function handler(req, res) {
       redis.set(K(poolId).stats, JSON.stringify({ champion: {}, fn: {}, sf: {}, qf: {}, groups: {} })),
     ]);
     await touchExpiry(redis, poolId);
+    await redis.incr(POOLS_MADE_KEY);
+    await redis.expireat(POOLS_MADE_KEY, Math.floor(DATA_EXPIRE_TS / 1000)).catch(() => {});
 
     return res.status(200).json({ ok: true, poolId, token });
   } catch (err) {

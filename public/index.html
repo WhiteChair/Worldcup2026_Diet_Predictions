@@ -480,6 +480,19 @@ async function countVisit() {
   sessionStorage.setItem(key, "1");
   await post("/api/visit", { pool:POOL }).catch(() => {});
 }
+async function loadHomeStats() {
+  let r;
+  if (sessionStorage.getItem("wc_home_visited")) {
+    r = await api("/api/visit"); // read only
+  } else {
+    sessionStorage.setItem("wc_home_visited", "1");
+    r = await post("/api/visit", { home:true }); // count this visitor
+  }
+  if (r.ok && r.body) {
+    $("chipVisits").textContent = `👁 ${r.body.visits} visits`;
+    $("chipPreds").textContent = `🏆 ${r.body.pools} pools created`;
+  }
+}
 
 // ---- organizer global-results editor (home) ----
 function renderOrgResults() {
@@ -518,6 +531,7 @@ function wireHome() {
     $("copyPlay").onclick = () => navigator.clipboard.writeText(play).then(() => flash("Play link copied.", "ok"));
     $("copyAdmin").onclick = () => navigator.clipboard.writeText(admin).then(() => flash("Admin link copied.", "ok"));
     flash("Pool created. Save your links!", "ok");
+    api("/api/visit").then(s => { if (s.ok && s.body) $("chipPreds").textContent = `🏆 ${s.body.pools} pools created`; });
   };
   $("listBtn").onclick = async () => {
     const code = $("listCode").value; if (!code) return flash("Enter owner code.", "err");
@@ -605,6 +619,7 @@ wireHome();
 wirePool();
 if (!POOL) {
   show("home");
+  loadHomeStats();
 } else {
   show("pool");
   loadState().then(ok => {
